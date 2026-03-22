@@ -7,6 +7,9 @@ import type { RawPermitRow } from '../types';
 
 const API_BASE = 'https://data.cityofnewyork.us/resource/rbx6-tga4.json';
 
+// Socrata app token — removes rate limiting on the NYC Open Data API.
+const APP_TOKEN = import.meta.env.VITE_SOCRATA_APP_TOKEN as string | undefined;
+
 /**
  * Fetch permit rows from NYC Open Data.
  *
@@ -15,12 +18,12 @@ const API_BASE = 'https://data.cityofnewyork.us/resource/rbx6-tga4.json';
  * Results are ordered by issued_date DESC so the freshest permits surface
  * first if the dataset ever grows beyond the limit.
  *
- * @param limit  Maximum rows to fetch. Default 50 000 — enough to cover all
- *               active DOB NOW permits city-wide with room to spare.
+ * @param limit  Maximum rows to fetch. Default 10 000 — covers active permits
+ *               across all five boroughs with fast load times.
  * @param offset Optional offset for future pagination.
  */
 export async function fetchPermitRows(
-  limit = 50000,
+  limit = 10000,
   offset = 0,
 ): Promise<RawPermitRow[]> {
   // Today's date in ISO format for the expiry boundary (server-side filter).
@@ -37,7 +40,11 @@ export async function fetchPermitRows(
   url.searchParams.set('$where', where);
   url.searchParams.set('$order', 'issued_date DESC');
 
-  const response = await fetch(url.toString());
+  const headers: HeadersInit = APP_TOKEN
+    ? { 'X-App-Token': APP_TOKEN }
+    : {};
+
+  const response = await fetch(url.toString(), { headers });
 
   if (!response.ok) {
     throw new Error(
