@@ -406,11 +406,6 @@ ul {
    =========================================================================== */
 
 @media (min-width: 768px) {
-  /* Attribution: restore to bottom of screen on desktop (no bottom bar) */
-  .cuc-attribution {
-    bottom: 8px;
-  }
-
   /* Bottom bar: reposition to top-left, slide as whole unit when panel opens */
   .cuc-bottom-bar {
     position: absolute;
@@ -766,8 +761,7 @@ ul {
 
 .cuc-attribution {
   position: absolute;
-  /* On mobile: lift above the bottom bar (safe-area + bar padding + search height + gap) */
-  bottom: calc(max(20px, env(safe-area-inset-bottom)) + 62px);
+  bottom: 8px;
   left: 8px;
   z-index: 5;
   display: flex;
@@ -803,4 +797,11 @@ ul {
 
 .cuc-attribution-linkedin:hover {
   opacity: 0.75;
+}
+
+/* Mobile-only: lift attribution above the bottom bar */
+@media (max-width: 767px) {
+  .cuc-attribution {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 62px);
+  }
 }
