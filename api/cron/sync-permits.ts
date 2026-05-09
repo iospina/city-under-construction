@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { runSync } from '../../lib/sync';
+import { runSync } from '../../lib/sync.js';
 
 export const config = { maxDuration: 300 };
 

@@ -15,7 +15,7 @@
 // never a partial state.
 // ---------------------------------------------------------------------------
 
-import { getPool } from './db';
+import { getPool } from './db.js';
 
 const DOB_NOW_URL = 'https://data.cityofnewyork.us/resource/rbx6-tga4.json';
 const FETCH_PAGE_SIZE = 50_000;

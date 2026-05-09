@@ -28,8 +28,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { sql } from '../lib/db';
-import { findVenueAliasByBbl } from '../src/services/venueAliases';
+import { sql } from '../lib/db.js';
+import { findVenueAliasByBbl } from '../src/services/venueAliases.js';
 
 interface ParcelSummaryRow {
   house_no: string | null;
