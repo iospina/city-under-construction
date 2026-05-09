@@ -29,6 +29,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { sql } from '../lib/db';
+import { findVenueAliasByBbl } from '../src/services/venueAliases';
 
 interface ParcelSummaryRow {
   house_no: string | null;
@@ -159,7 +160,14 @@ export default async function handler(
         const total = r.total;
         const noun = total === 1 ? 'permit' : 'permits';
 
-        const ogTitle = borough
+        // If this BBL is in our hand-curated venue alias table (Brooklyn
+        // Mirage, Pacific Park, etc.), use its recognizable display name
+        // for the share card instead of whichever sub-address the rep
+        // row happens to surface (e.g., "135 Washington Walk").
+        const alias = findVenueAliasByBbl(bbl);
+        const ogTitle = alias
+          ? `${alias.name}, ${alias.borough}`
+          : borough
           ? `${addr}, ${borough}`
           : addr || 'CityUnderConstruction';
         const ogDescription = `${total} active construction ${noun} at this address. CityUnderConstruction shows the public DOB record for what's actually being built across NYC.`;

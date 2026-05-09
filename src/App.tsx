@@ -445,17 +445,29 @@ export default function App() {
     async (suggestion: SearchSuggestion) => {
       const [lng, lat] = suggestion.center;
 
-      // Kick off GeoSearch in parallel with the local text-token match.
-      const geoBblPromise = lookupBblByLatLng(lat, lng);
-      const textMatch = findMatchingParcel(suggestion, parcels);
-
       let matched: Parcel | null = null;
 
-      const geoBbl = await geoBblPromise;
-      if (geoBbl) {
-        matched = parcels.find((p) => p.bbl === geoBbl) ?? null;
+      // Alias suggestions encode the canonical BBL in their id
+      // (`alias:{bbl}`). Resolve directly — neither Mapbox geocoding
+      // nor GeoSearch reverse can be trusted to round-trip the user's
+      // intent for venue names that span multiple BBLs (e.g., a "Pacific
+      // Park" search shouldn't snap to whatever BBL happens to be
+      // closest to the development's centroid).
+      if (suggestion.id.startsWith('alias:')) {
+        const aliasBbl = suggestion.id.slice('alias:'.length);
+        matched = parcels.find((p) => p.bbl === aliasBbl) ?? null;
+      } else {
+        // Standard path: kick off GeoSearch in parallel with the local
+        // text-token match.
+        const geoBblPromise = lookupBblByLatLng(lat, lng);
+        const textMatch = findMatchingParcel(suggestion, parcels);
+
+        const geoBbl = await geoBblPromise;
+        if (geoBbl) {
+          matched = parcels.find((p) => p.bbl === geoBbl) ?? null;
+        }
+        if (!matched) matched = textMatch;
       }
-      if (!matched) matched = textMatch;
 
       if (matched) {
         // Fly to the matched parcel's stored coords if available, otherwise
