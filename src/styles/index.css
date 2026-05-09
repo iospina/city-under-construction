@@ -825,11 +825,10 @@ ul {
     bottom: calc(max(20px, env(safe-area-inset-bottom)) + 52px);
   }
 
-  /* When the parcel sheet is open, the sheet covers the bottom ~67% of
-     the viewport. Lift the attribution above the sheet's top edge with
-     the same kind of padding to the sheet that it has to the search bar
-     when the sheet is closed. */
+  /* When the parcel sheet is open, the sheet's max-height is 65vh (see
+     .cuc-sheet). Lift the attribution to sit 8px above the sheet's top
+     edge. Keep this in sync with .cuc-sheet's max-height. */
   .cuc-app--sheet-open .cuc-attribution {
-    bottom: calc(67vh + 8px);
+    bottom: calc(65vh + 8px);
   }
 }
