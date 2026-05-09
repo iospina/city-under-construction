@@ -72,6 +72,27 @@ export const VENUE_ALIASES: readonly VenueAlias[] = [
     // Approximate centroid of the Pacific Park development
     center: [-73.97552, 40.683412],
   },
+  {
+    name: 'Chinatown Borough-Based Jail',
+    aliases: [
+      'chinatown jail',
+      'chinatown borough-based jail',
+      'chinatown borough based jail',
+      'manhattan detention complex',
+      'manhattan detention center',
+      'mdc manhattan',
+      'the tombs',
+      'borough-based jail',
+      'borough based jail',
+      'rikers replacement',
+    ],
+    bbl: '1001670001',
+    displayAddress: '124–125 White Street',
+    borough: 'Manhattan',
+    zipCode: '10013',
+    // Approximate center of the Manhattan Detention Complex block
+    center: [-74.000648, 40.716543],
+  },
 ];
 
 /**

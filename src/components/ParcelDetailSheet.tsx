@@ -19,6 +19,7 @@ import EmptyState from './EmptyState';
 import PermitHistorySection from './PermitHistorySection';
 import AboutParcelSection from './AboutParcelSection';
 import { track, AnalyticsEvents } from '../services/analytics';
+import { findVenueAliasByBbl } from '../services/venueAliases';
 
 /**
  * Where the user came from when this parcel was opened. Drives the
@@ -118,6 +119,16 @@ export default function ParcelDetailSheet({
     track(AnalyticsEvents.PARCEL_SHEET_CLOSED, { parcelId: parcel.parcelId });
     onClose();
   };
+
+  // ---- Header rendering ----------------------------------------------------
+  // For BBLs in the venue alias table (Brooklyn Mirage, Pacific Park,
+  // Chinatown jail), surface the recognizable name as the primary header
+  // and demote the rep-row address to a secondary line. For all other
+  // parcels, the rep-row address stays primary and there is no secondary
+  // address line.
+  const venueAlias = findVenueAliasByBbl(parcel.bbl);
+  const primaryHeader = venueAlias ? venueAlias.name : parcel.displayAddress;
+  const secondaryAddress = venueAlias ? parcel.displayAddress : null;
 
   // ---- Neighbourhood + borough context line --------------------------------
   const contextParts = [parcel.nta, parcel.borough].filter(Boolean);
@@ -233,7 +244,10 @@ export default function ParcelDetailSheet({
             </button>
           </div>
 
-          <h2 className="cuc-sheet-address">{parcel.displayAddress}</h2>
+          <h2 className="cuc-sheet-address">{primaryHeader}</h2>
+          {secondaryAddress && (
+            <p className="cuc-sheet-context">{secondaryAddress}</p>
+          )}
           {contextLine && (
             <p className="cuc-sheet-context">{contextLine}</p>
           )}
