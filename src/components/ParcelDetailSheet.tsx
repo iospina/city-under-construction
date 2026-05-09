@@ -77,32 +77,20 @@ export default function ParcelDetailSheet({
   });
 
   // ---- Analytics ---------------------------------------------------------
-  // We fire three things here:
-  //   1. Legacy events (parcel_sheet_opened_from_*) — kept for backward
-  //      compatibility with existing PostHog dashboards.
-  //   2. parcel_detail_viewed (slice 2) — unified event with entry_source,
-  //      designed to be the canonical funnel event going forward.
-  //   3. time_to_parcel_detail — fired ONLY for the first parcel detail
-  //      render of a cold-start page session, with `ms` measured from
-  //      navigation start. This is the brief's sub-5-second observable.
+  // Two events fire on every parcel-detail render:
+  //   1. parcel_detail_viewed — canonical funnel event, with entry_source
+  //      ∈ search | map | share_link | direct so the share-flow audience
+  //      can be told apart from search/map traffic.
+  //   2. time_to_parcel_detail — fires ONLY for the first parcel render of
+  //      a cold-start page session, with `ms` measured from navigation
+  //      start. Gates the brief's sub-5-second Aha moment claim.
   useEffect(() => {
-    if (source === 'search') {
-      track(AnalyticsEvents.PARCEL_SHEET_OPENED_FROM_SEARCH, {
-        parcelId: parcel.parcelId,
-      });
-    } else if (source === 'map') {
-      track(AnalyticsEvents.PARCEL_SHEET_OPENED_FROM_MAP, {
-        parcelId: parcel.parcelId,
-      });
-    }
-
     track(AnalyticsEvents.PARCEL_DETAIL_VIEWED, {
       parcelId: parcel.parcelId,
       bbl: parcel.bbl,
       entry_source: source,
     });
 
-    // First-render-of-session timing for cold-start observability.
     if (!timeToParcelDetailFired && isColdStartSession()) {
       timeToParcelDetailFired = true;
       track(AnalyticsEvents.TIME_TO_PARCEL_DETAIL, {
