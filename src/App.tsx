@@ -295,6 +295,9 @@ export default function App() {
   const [selectedParcel, setSelectedParcel] = useState<Parcel | null>(null);
   const [sheetSource, setSheetSource] = useState<SheetSource>('map');
   const mapInstanceRef = useRef<MapboxMap | null>(null);
+  // State (not just ref) so the auto-fly effect re-runs when the map loads
+  // after a cold-start hydration that already set selectedParcel.
+  const [mapInstance, setMapInstance] = useState<MapboxMap | null>(null);
 
   // ---- URL routing for /parcel/{bbl} share links --------------------------
   // The URL is the source of truth for which parcel is open. On mount we
@@ -342,6 +345,26 @@ export default function App() {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, [parcels]);
+
+  // For URL-driven selection (cold-start /parcel/{bbl} or back/forward),
+  // fly the map to the parcel once both the parcel AND the map are ready.
+  // The search and marker-click paths fly themselves with their own padding
+  // — this effect only handles share_link source so we don't double-fly.
+  useEffect(() => {
+    if (sheetSource !== 'share_link') return;
+    if (!mapInstance || !selectedParcel) return;
+    if (selectedParcel.latitude === 0 && selectedParcel.longitude === 0) return;
+
+    const isMobile = window.innerWidth < 768;
+    mapInstance.flyTo({
+      center: [selectedParcel.longitude, selectedParcel.latitude],
+      zoom: 16,
+      padding: isMobile
+        ? { top: 60, bottom: Math.round(window.innerHeight * 0.67), left: 20, right: 20 }
+        : { top: 60, bottom: 60, left: 420, right: 60 },
+      duration: 600,
+    });
+  }, [mapInstance, selectedParcel, sheetSource]);
 
   // ---- Saved parcel IDs state -----------------------------------------------
   const [savedParcelIds, setSavedParcelIds] = useState<Set<string>>(() => {
@@ -412,6 +435,7 @@ export default function App() {
   // ---- Map ready callback --------------------------------------------------
   const handleMapReady = useCallback((map: MapboxMap) => {
     mapInstanceRef.current = map;
+    setMapInstance(map);
   }, []);
 
   // ---- Marker click --------------------------------------------------------
