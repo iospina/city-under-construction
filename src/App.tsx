@@ -35,6 +35,7 @@ import MapView from './components/MapView';
 import SearchBar from './components/SearchBar';
 import ParcelDetailSheet from './components/ParcelDetailSheet';
 import { track, AnalyticsEvents } from './services/analytics';
+import { lookupBblByLatLng } from './services/geosearch';
 
 // ---------------------------------------------------------------------------
 // Matching helpers
@@ -373,12 +374,27 @@ export default function App() {
   }, []);
 
   // ---- Search result selected ----------------------------------------------
+  // Two-track resolution: text-token match (synchronous, free, works fine
+  // for parcels labeled by their primary street) AND NYC GeoSearch reverse
+  // lookup (one network call, authoritative for "what BBL is at this lat/lng"
+  // — fixes cross-street filings like Project Commodore at "175 Park Avenue"
+  // that DOB actually files at "122 EAST 42 STREET"). When GeoSearch returns
+  // a BBL we have data on, prefer it; otherwise fall back to text match.
   const handleSearchSelect = useCallback(
-    (suggestion: SearchSuggestion) => {
+    async (suggestion: SearchSuggestion) => {
       const [lng, lat] = suggestion.center;
 
-      // Try to match against ALL parcels (not just mappable ones)
-      const matched = findMatchingParcel(suggestion, parcels);
+      // Kick off GeoSearch in parallel with the local text-token match.
+      const geoBblPromise = lookupBblByLatLng(lat, lng);
+      const textMatch = findMatchingParcel(suggestion, parcels);
+
+      let matched: Parcel | null = null;
+
+      const geoBbl = await geoBblPromise;
+      if (geoBbl) {
+        matched = parcels.find((p) => p.bbl === geoBbl) ?? null;
+      }
+      if (!matched) matched = textMatch;
 
       if (matched) {
         // Fly to the matched parcel's stored coords if available, otherwise
