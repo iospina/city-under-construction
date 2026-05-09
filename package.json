@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "db:init": "dotenv -e .env.local -- tsx scripts/init-db.ts",
     "db:sync": "dotenv -e .env.local -- tsx scripts/sync.ts",
-    "db:verify": "dotenv -e .env.local -- tsx scripts/verify-bbl.ts"
+    "db:verify": "dotenv -e .env.local -- tsx scripts/verify-bbl.ts",
+    "db:audit-anchors": "dotenv -e .env.local -- tsx scripts/audit-anchors.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.0",
