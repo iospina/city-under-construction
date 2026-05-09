@@ -9,6 +9,19 @@
   "functions": {
     "api/cron/sync-permits.ts": {
       "maxDuration": 300
+    },
+    "api/render-parcel.ts": {
+      "includeFiles": "{dist/index.html,index.html}"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/parcel/:bbl",
+      "destination": "/api/render-parcel?bbl=:bbl"
+    },
+    {
+      "source": "/parcel/:bbl/",
+      "destination": "/api/render-parcel?bbl=:bbl"
+    }
+  ]
 }

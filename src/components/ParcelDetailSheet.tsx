@@ -20,11 +20,42 @@ import PermitHistorySection from './PermitHistorySection';
 import AboutParcelSection from './AboutParcelSection';
 import { track, AnalyticsEvents } from '../services/analytics';
 
+/**
+ * Where the user came from when this parcel was opened. Drives the
+ * `entry_source` property on `parcel_detail_viewed` so the launch arc's
+ * share-flow / search / map / direct-deep-link audiences can be told
+ * apart in PostHog.
+ */
+export type ParcelSheetEntrySource = 'search' | 'map' | 'share_link' | 'direct';
+
 interface ParcelDetailSheetProps {
   parcel: Parcel;
-  source: 'search' | 'map';
+  source: ParcelSheetEntrySource;
   onClose: () => void;
   onBookmarkToggle?: (parcelId: string, saved: boolean) => void;
+}
+
+/**
+ * Module-level guard so `time_to_parcel_detail` fires at most once per
+ * page session. Resets only on a full reload.
+ */
+let timeToParcelDetailFired = false;
+
+/**
+ * True if the current page session was loaded directly (cold start) rather
+ * than restored from history or arrived via a back/forward navigation. Used
+ * to gate `time_to_parcel_detail` so we only measure the launch-arc-relevant
+ * "user landed at a CUC URL and saw a permit" path.
+ */
+function isColdStartSession(): boolean {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    return !nav || nav.type === 'navigate';
+  } catch {
+    return true;
+  }
 }
 
 export default function ParcelDetailSheet({
@@ -44,15 +75,43 @@ export default function ParcelDetailSheet({
     }
   });
 
-  // ---- Analytics: track sheet open ----------------------------------------
+  // ---- Analytics ---------------------------------------------------------
+  // We fire three things here:
+  //   1. Legacy events (parcel_sheet_opened_from_*) — kept for backward
+  //      compatibility with existing PostHog dashboards.
+  //   2. parcel_detail_viewed (slice 2) — unified event with entry_source,
+  //      designed to be the canonical funnel event going forward.
+  //   3. time_to_parcel_detail — fired ONLY for the first parcel detail
+  //      render of a cold-start page session, with `ms` measured from
+  //      navigation start. This is the brief's sub-5-second observable.
   useEffect(() => {
-    const event =
-      source === 'search'
-        ? AnalyticsEvents.PARCEL_SHEET_OPENED_FROM_SEARCH
-        : AnalyticsEvents.PARCEL_SHEET_OPENED_FROM_MAP;
+    if (source === 'search') {
+      track(AnalyticsEvents.PARCEL_SHEET_OPENED_FROM_SEARCH, {
+        parcelId: parcel.parcelId,
+      });
+    } else if (source === 'map') {
+      track(AnalyticsEvents.PARCEL_SHEET_OPENED_FROM_MAP, {
+        parcelId: parcel.parcelId,
+      });
+    }
 
-    track(event, { parcelId: parcel.parcelId });
-  }, [parcel.parcelId, source]);
+    track(AnalyticsEvents.PARCEL_DETAIL_VIEWED, {
+      parcelId: parcel.parcelId,
+      bbl: parcel.bbl,
+      entry_source: source,
+    });
+
+    // First-render-of-session timing for cold-start observability.
+    if (!timeToParcelDetailFired && isColdStartSession()) {
+      timeToParcelDetailFired = true;
+      track(AnalyticsEvents.TIME_TO_PARCEL_DETAIL, {
+        ms: Math.round(performance.now()),
+        entry_source: source,
+        parcelId: parcel.parcelId,
+        bbl: parcel.bbl,
+      });
+    }
+  }, [parcel.parcelId, parcel.bbl, source]);
 
   // ---- Close ---------------------------------------------------------------
   const handleClose = () => {
@@ -64,30 +123,46 @@ export default function ParcelDetailSheet({
   const contextParts = [parcel.nta, parcel.borough].filter(Boolean);
   const contextLine = contextParts.join(', ');
 
-  // ---- Issue 4: Share action -----------------------------------------------
+  // ---- Share action --------------------------------------------------------
+  // Constructs a shareable URL pointing at this parcel's deep link
+  // (`${origin}/parcel/{bbl}`), uses the Web Share API when available
+  // (mobile), and falls back to clipboard. Either way we fire
+  // `share_link_copied` so we can measure share-flow engagement.
   const handleShare = async () => {
-    const parts = [parcel.displayAddress];
-    if (contextLine) parts.push(contextLine);
-    const shareText = parts.join(' — ');
+    const shareUrl = `${window.location.origin}/parcel/${parcel.bbl}`;
     const shareTitle = `CityUnderConstruction — ${parcel.displayAddress}`;
+    const shareText = contextLine
+      ? `${parcel.displayAddress} — ${contextLine}`
+      : parcel.displayAddress;
 
+    let outcome: 'native_share' | 'clipboard' | 'failed' = 'failed';
     if (typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: shareTitle,
           text: shareText,
-          url: window.location.href,
+          url: shareUrl,
         });
+        outcome = 'native_share';
       } catch {
-        // User cancelled or browser blocked — no action needed
+        // User cancelled the native share sheet — treat as no-op, do not
+        // fire the share_link_copied event in that case.
+        return;
       }
     } else {
       try {
-        await navigator.clipboard.writeText(`${shareTitle}\n${shareText}`);
+        await navigator.clipboard.writeText(shareUrl);
+        outcome = 'clipboard';
       } catch {
-        // Clipboard unavailable in this context — silent fail
+        // Clipboard unavailable (insecure context, storage blocked, etc.)
       }
     }
+
+    track(AnalyticsEvents.SHARE_LINK_COPIED, {
+      parcelId: parcel.parcelId,
+      bbl: parcel.bbl,
+      outcome,
+    });
   };
 
   // ---- Item 4: Bookmark toggle — writes to localStorage -------------------

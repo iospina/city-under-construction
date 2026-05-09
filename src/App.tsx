@@ -26,7 +26,7 @@
 //   without opening the sheet.
 // ---------------------------------------------------------------------------
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { Map as MapboxMap } from 'mapbox-gl';
 import type { Parcel, SearchSuggestion } from './types';
 import { useParcels } from './hooks/useParcels';
@@ -258,10 +258,24 @@ function findMatchingParcel(
 }
 
 // ---------------------------------------------------------------------------
-// Geolocation types
+// Geolocation + URL types
 // ---------------------------------------------------------------------------
 
 type LocateState = 'idle' | 'loading' | 'denied';
+
+/**
+ * Source of the parcel-detail-sheet open. Drives the `entry_source` field
+ * on PostHog's `parcel_detail_viewed` event so we can tell apart how the
+ * user got here (clicked a marker / picked a search result / arrived via
+ * a shared deep link).
+ */
+type SheetSource = 'search' | 'map' | 'share_link';
+
+/** Parse "/parcel/{bbl}" out of a pathname. Returns null for any other path. */
+function parseParcelBblFromPath(pathname: string): string | null {
+  const m = pathname.match(/^\/parcel\/(\d{10})\/?$/);
+  return m ? m[1] : null;
+}
 
 // ---------------------------------------------------------------------------
 // App component
@@ -279,8 +293,55 @@ export default function App() {
   } = useSearch();
 
   const [selectedParcel, setSelectedParcel] = useState<Parcel | null>(null);
-  const [sheetSource, setSheetSource] = useState<'search' | 'map'>('map');
+  const [sheetSource, setSheetSource] = useState<SheetSource>('map');
   const mapInstanceRef = useRef<MapboxMap | null>(null);
+
+  // ---- URL routing for /parcel/{bbl} share links --------------------------
+  // The URL is the source of truth for which parcel is open. On mount we
+  // parse it once to figure out if we landed on a deep link; everything
+  // after that is driven by selectedParcel state via pushState/popstate.
+  const initialBblFromUrl = useMemo(() => parseParcelBblFromPath(window.location.pathname), []);
+  const initialHydratedRef = useRef(false);
+
+  // Hydrate from URL once parcels load — only fires for cold-start /parcel/{bbl} hits.
+  useEffect(() => {
+    if (initialHydratedRef.current) return;
+    if (parcels.length === 0) return;
+
+    if (initialBblFromUrl) {
+      const parcel = parcels.find((p) => p.bbl === initialBblFromUrl) ?? null;
+      if (parcel) {
+        setSelectedParcel(parcel);
+        setSheetSource('share_link');
+      }
+    }
+    initialHydratedRef.current = true;
+  }, [parcels, initialBblFromUrl]);
+
+  // Keep the URL in sync with selection state (after the initial hydration).
+  useEffect(() => {
+    if (!initialHydratedRef.current) return;
+    const targetPath = selectedParcel ? `/parcel/${selectedParcel.bbl}` : '/';
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ bbl: selectedParcel?.bbl ?? null }, '', targetPath);
+    }
+  }, [selectedParcel]);
+
+  // Browser back/forward: re-derive selection from the URL.
+  useEffect(() => {
+    const onPopState = () => {
+      const bbl = parseParcelBblFromPath(window.location.pathname);
+      if (bbl) {
+        const parcel = parcels.find((p) => p.bbl === bbl) ?? null;
+        setSelectedParcel(parcel);
+        if (parcel) setSheetSource('share_link');
+      } else {
+        setSelectedParcel(null);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [parcels]);
 
   // ---- Saved parcel IDs state -----------------------------------------------
   const [savedParcelIds, setSavedParcelIds] = useState<Set<string>>(() => {
