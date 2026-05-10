@@ -12,6 +12,11 @@
 --
 -- Indexes: only what reads need.
 --   idx_permits_bbl  — every parcel-detail read filters by BBL.
+--   idx_permits_geo  — viewport-filtered /api/parcels reads. Functional index
+--                      on numeric casts of latitude/longitude. Partial filter
+--                      excludes rows with empty or non-numeric coords so the
+--                      cast never fails (DOB NOW occasionally emits empty
+--                      coords for filings on BBLs without geocoded addresses).
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS permits (
@@ -58,3 +63,8 @@ CREATE TABLE IF NOT EXISTS permits (
 );
 
 CREATE INDEX IF NOT EXISTS idx_permits_bbl ON permits (bbl);
+
+CREATE INDEX IF NOT EXISTS idx_permits_geo
+  ON permits ((latitude::double precision), (longitude::double precision))
+  WHERE latitude  ~ '^-?[0-9]+(\.[0-9]+)?$'
+    AND longitude ~ '^-?[0-9]+(\.[0-9]+)?$';
