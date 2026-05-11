@@ -1,16 +1,17 @@
 // ---------------------------------------------------------------------------
 // GET /api/parcels
-// Returns rows from the permits table in the same shape the client today
-// consumes from DOB NOW directly.
+// Returns permits whose coordinates fall inside the requested viewport box.
 //
 // Query params:
-//   bbox=minLng,minLat,maxLng,maxLat  — optional. When present, only permits
-//                                       whose coordinates fall inside the box
-//                                       are returned. When absent, the full
-//                                       citywide payload is returned (kept
-//                                       for backward compatibility while the
-//                                       client transitions to viewport-aware
-//                                       fetching).
+//   bbox=minLng,minLat,maxLng,maxLat  — REQUIRED. Caps total area to 1° in
+//                                       each dimension. Missing or malformed
+//                                       bbox returns 400.
+//
+// History note: an earlier version of this endpoint returned the entire
+// citywide payload (~93 MB raw, ~10 MB gzipped) when called without bbox.
+// That branch existed for backward compatibility while the client migrated
+// to viewport-aware fetching, and has been removed now that the client is
+// fully on bbox. Bookmarks and share-link landings use /api/parcels/[bbl].
 //
 // Caching: the underlying data only changes once a day after the cron sync,
 // so we can hold edge-cached responses for a full day. Vercel's edge cache
@@ -51,37 +52,29 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
-  try {
-    const bbox = parseBbox(req.query.bbox);
+  const bbox = parseBbox(req.query.bbox);
+  if (!bbox) {
+    return res.status(400).json({
+      error:
+        'bbox query parameter is required (format: minLng,minLat,maxLng,maxLat; max 1° per dimension)',
+    });
+  }
 
-    // Both branches return the same column set; Neon's `sql` template tag
-    // doesn't support fragment composition, so we inline the column list in
-    // each. Keep them in sync if columns are added.
-    const rows = bbox
-      ? await sql`
-          SELECT
-            borough, community_board, council_district, census_tract, nta,
-            bin, bbl, house_no, street_name,
-            job_filing_number, job_doc_number, tracking_number, sequence_number,
-            work_permit, work_permit_type, permit_status, filing_reason,
-            work_type, work_on_floor, job_description, estimated_job_cost,
-            approved_date, issued_date, expired_date, latitude, longitude
-          FROM permits
-          WHERE latitude  ~ '^-?[0-9]+(\.[0-9]+)?$'
-            AND longitude ~ '^-?[0-9]+(\.[0-9]+)?$'
-            AND latitude::double precision  BETWEEN ${bbox.minLat} AND ${bbox.maxLat}
-            AND longitude::double precision BETWEEN ${bbox.minLng} AND ${bbox.maxLng}
-        `
-      : await sql`
-          SELECT
-            borough, community_board, council_district, census_tract, nta,
-            bin, bbl, house_no, street_name,
-            job_filing_number, job_doc_number, tracking_number, sequence_number,
-            work_permit, work_permit_type, permit_status, filing_reason,
-            work_type, work_on_floor, job_description, estimated_job_cost,
-            approved_date, issued_date, expired_date, latitude, longitude
-          FROM permits
-        `;
+  try {
+    const rows = await sql`
+      SELECT
+        borough, community_board, council_district, census_tract, nta,
+        bin, bbl, house_no, street_name,
+        job_filing_number, job_doc_number, tracking_number, sequence_number,
+        work_permit, work_permit_type, permit_status, filing_reason,
+        work_type, work_on_floor, job_description, estimated_job_cost,
+        approved_date, issued_date, expired_date, latitude, longitude
+      FROM permits
+      WHERE latitude  ~ '^-?[0-9]+(\.[0-9]+)?$'
+        AND longitude ~ '^-?[0-9]+(\.[0-9]+)?$'
+        AND latitude::double precision  BETWEEN ${bbox.minLat} AND ${bbox.maxLat}
+        AND longitude::double precision BETWEEN ${bbox.minLng} AND ${bbox.maxLng}
+    `;
 
     res.setHeader(
       'Cache-Control',
