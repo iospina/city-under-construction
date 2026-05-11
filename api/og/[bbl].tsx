@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
 // /api/og/[bbl]
 // Per-parcel Open Graph image. Returns a 1200×630 PNG with the parcel's
-// address, borough, active permit count, and venue alias name (when
-// applicable).
+// address, borough, active permit count, venue alias name (when applicable),
+// and a Mapbox static map of the parcel's actual location.
 //
 // Runs in the Edge runtime via @vercel/og — fast cold starts and global
 // distribution, since OG crawlers (Slack, iMessage, X, LinkedIn) hit this
@@ -28,6 +28,8 @@ interface ParcelSummaryRow {
   house_no: string | null;
   street_name: string | null;
   borough: string | null;
+  latitude: string | null;
+  longitude: string | null;
   total: number;
 }
 
@@ -40,6 +42,33 @@ const BLUE = '#0062CF';
 const INK = '#0a0a0a';
 const MUTED = '#5a5a5a';
 const BG = '#fafafa';
+
+// OG image dimensions.
+const W = 1200;
+const H = 630;
+// Right half holds the map; left half holds the text.
+const MAP_W = 600;
+const TEXT_W = W - MAP_W;
+
+/**
+ * Build a Mapbox Static Images URL centered on the parcel with a pin at the
+ * exact coordinates. Style matches the in-app map (light-v11). Returns null
+ * if any input is missing — the JSX falls back to a typography-only layout.
+ */
+function buildMapUrl(
+  lat: number,
+  lng: number,
+  token: string,
+): string {
+  // pin-l = large pin, +HEX = colour. Mapbox draws this on top of the map.
+  const overlay = `pin-l+${BLUE.replace('#', '')}(${lng},${lat})`;
+  // zoom 15 shows roughly a block in NYC. @2x doubles pixel density for
+  // crisper rendering on retina displays.
+  return (
+    `https://api.mapbox.com/styles/v1/mapbox/light-v11/static/${overlay}` +
+    `/${lng},${lat},15/${MAP_W}x${H}@2x?access_token=${token}`
+  );
+}
 
 export default async function handler(req: Request) {
   const url = new URL(req.url);
@@ -58,7 +87,8 @@ export default async function handler(req: Request) {
   let address = '';
   let borough = '';
   let permitCount = 0;
-  let venueName: string | null = null;
+  let lat: number | null = null;
+  let lng: number | null = null;
 
   try {
     const sql = neon(process.env.DATABASE_URL!);
@@ -67,9 +97,13 @@ export default async function handler(req: Request) {
         house_no,
         street_name,
         borough,
+        latitude,
+        longitude,
         COUNT(*) OVER ()::int AS total
       FROM permits
       WHERE bbl = ${bbl}
+        AND latitude  ~ '^-?[0-9]+(\.[0-9]+)?$'
+        AND longitude ~ '^-?[0-9]+(\.[0-9]+)?$'
       LIMIT 1
     `) as ParcelSummaryRow[];
 
@@ -80,13 +114,32 @@ export default async function handler(req: Request) {
       address = [houseNo, toTitleCase(streetName)].filter(Boolean).join(' ');
       borough = r.borough ? toTitleCase(r.borough) : '';
       permitCount = r.total;
+      const parsedLat = Number(r.latitude);
+      const parsedLng = Number(r.longitude);
+      if (Number.isFinite(parsedLat) && Number.isFinite(parsedLng)) {
+        lat = parsedLat;
+        lng = parsedLng;
+      }
     }
   } catch (err) {
     console.error('[og] db lookup failed for bbl', bbl, err);
   }
 
   const alias = findVenueAliasByBbl(bbl);
-  if (alias) venueName = alias.name;
+  const venueName = alias ? alias.name : null;
+
+  // If the DB row had no coords but the alias entry has approximate ones,
+  // use those — Pacific Park and Chinatown jail both have centroid coords
+  // baked into the alias table for cases where the rep row lacks geocoding.
+  if ((lat === null || lng === null) && alias) {
+    [lng, lat] = alias.center;
+  }
+
+  const mapboxToken = process.env.VITE_MAPBOX_ACCESS_TOKEN;
+  const mapUrl =
+    lat !== null && lng !== null && mapboxToken
+      ? buildMapUrl(lat, lng, mapboxToken)
+      : null;
 
   const displayHeadline = venueName || address || 'CityUnderConstruction';
   const displaySubline = venueName
@@ -98,6 +151,10 @@ export default async function handler(req: Request) {
   const permitText =
     permitCount > 0 ? `${permitCount} active ${noun}` : 'No active permits';
 
+  // Headline sizing: scales down when the venue name is present (longer
+  // text) so it fits comfortably in the left-half text column.
+  const headlineFontSize = venueName ? 56 : 64;
+
   return new ImageResponse(
     (
       <div
@@ -105,23 +162,24 @@ export default async function handler(req: Request) {
           height: '100%',
           width: '100%',
           display: 'flex',
-          flexDirection: 'column',
           background: BG,
-          padding: '64px 72px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
-        {/* Header: wordmark + URL */}
+        {/* ---- Left column: text content -------------------------------- */}
         <div
           style={{
+            width: TEXT_W,
+            height: '100%',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            flexDirection: 'column',
+            padding: '52px 48px',
           }}
         >
+          {/* Wordmark */}
           <div
             style={{
-              fontSize: 28,
+              fontSize: 24,
               color: BLUE,
               fontWeight: 600,
               letterSpacing: -0.5,
@@ -129,85 +187,100 @@ export default async function handler(req: Request) {
           >
             CityUnderConstruction
           </div>
-          <div style={{ fontSize: 22, color: MUTED }}>
-            cuc-v2.vercel.app
-          </div>
-        </div>
 
-        {/* Body: headline + subline, takes remaining vertical space */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            marginTop: 40,
-          }}
-        >
+          {/* Headline + subline take the remaining vertical space */}
           <div
             style={{
-              fontSize: venueName ? 72 : 84,
-              fontWeight: 700,
-              color: INK,
-              lineHeight: 1.05,
-              letterSpacing: -2,
-              maxWidth: 1056,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
             }}
           >
-            {displayHeadline}
-          </div>
-          {displaySubline ? (
             <div
               style={{
-                fontSize: 34,
-                color: MUTED,
-                marginTop: 24,
-                letterSpacing: -0.5,
+                fontSize: headlineFontSize,
+                fontWeight: 700,
+                color: INK,
+                lineHeight: 1.05,
+                letterSpacing: -1.5,
               }}
             >
-              {displaySubline}
+              {displayHeadline}
             </div>
-          ) : null}
+            {displaySubline ? (
+              <div
+                style={{
+                  fontSize: 26,
+                  color: MUTED,
+                  marginTop: 16,
+                  letterSpacing: -0.3,
+                }}
+              >
+                {displaySubline}
+              </div>
+            ) : null}
+          </div>
+
+          {/* Footer: permit count pill */}
+          <div style={{ display: 'flex' }}>
+            <div
+              style={{
+                background: BLUE,
+                color: 'white',
+                borderRadius: 999,
+                padding: '14px 28px',
+                fontSize: 24,
+                fontWeight: 600,
+                letterSpacing: -0.3,
+              }}
+            >
+              {permitText}
+            </div>
+          </div>
         </div>
 
-        {/* Footer: permit count chip + tagline */}
+        {/* ---- Right column: Mapbox static map -------------------------- */}
+        {/* Fallback: if no map URL, render a tinted panel with the BBL.
+            Keeps the layout balanced rather than leaving a white void. */}
         <div
           style={{
+            width: MAP_W,
+            height: '100%',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            position: 'relative',
           }}
         >
-          <div
-            style={{
-              background: BLUE,
-              color: 'white',
-              borderRadius: 999,
-              padding: '16px 32px',
-              fontSize: 28,
-              fontWeight: 600,
-              letterSpacing: -0.3,
-            }}
-          >
-            {permitText}
-          </div>
-          <div
-            style={{
-              fontSize: 22,
-              color: MUTED,
-              textAlign: 'right',
-              maxWidth: 540,
-              lineHeight: 1.3,
-            }}
-          >
-            What's being built at every NYC address
-          </div>
+          {mapUrl ? (
+            <img
+              src={mapUrl}
+              width={MAP_W}
+              height={H}
+              style={{ objectFit: 'cover' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#eef3f9',
+                color: MUTED,
+                fontSize: 22,
+                letterSpacing: -0.3,
+              }}
+            >
+              BBL {bbl}
+            </div>
+          )}
         </div>
       </div>
     ),
     {
-      width: 1200,
-      height: 630,
+      width: W,
+      height: H,
       headers: {
         'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=86400',
       },
