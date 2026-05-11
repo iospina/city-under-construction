@@ -35,6 +35,14 @@ import MapView from './components/MapView';
 import SearchBar from './components/SearchBar';
 import ParcelDetailSheet from './components/ParcelDetailSheet';
 import { lookupBblByLatLng } from './services/geosearch';
+import type { Bbox } from './services/dataService';
+
+/**
+ * Debounce delay before turning a moveend into a bbox refetch. Long enough
+ * to coalesce rapid panning into a single request, short enough that the
+ * permits show up before the user starts wondering where they are.
+ */
+const BBOX_DEBOUNCE_MS = 300;
 
 // ---------------------------------------------------------------------------
 // Matching helpers
@@ -281,8 +289,13 @@ function parseParcelBblFromPath(pathname: string): string | null {
 // ---------------------------------------------------------------------------
 
 export default function App() {
-  // Use ALL parcels for matching; mappableParcels only for rendering markers.
-  const { parcels, mappableParcels, loading, error } = useParcels();
+  // Bbox is the source of truth for which permits are loaded. It updates
+  // on debounced map moveend (see handleMapReady) and gets clamped server-
+  // side to NYC's extent. `loadParcelByBbl` covers BBL-specific paths that
+  // don't depend on viewport (cold-start /parcel/{bbl}, popstate, search).
+  const [bbox, setBbox] = useState<Bbox | null>(null);
+  const { parcels, mappableParcels, loading, error, loadParcelByBbl } =
+    useParcels(bbox);
   const {
     query,
     setQuery,
@@ -305,20 +318,21 @@ export default function App() {
   const initialBblFromUrl = useMemo(() => parseParcelBblFromPath(window.location.pathname), []);
   const initialHydratedRef = useRef(false);
 
-  // Hydrate from URL once parcels load — only fires for cold-start /parcel/{bbl} hits.
+  // Hydrate from URL on mount — only fires for cold-start /parcel/{bbl} hits.
+  // Fetches the parcel directly via loadParcelByBbl regardless of viewport.
   useEffect(() => {
     if (initialHydratedRef.current) return;
-    if (parcels.length === 0) return;
+    initialHydratedRef.current = true;
 
-    if (initialBblFromUrl) {
-      const parcel = parcels.find((p) => p.bbl === initialBblFromUrl) ?? null;
+    if (!initialBblFromUrl) return;
+
+    loadParcelByBbl(initialBblFromUrl).then((parcel) => {
       if (parcel) {
         setSelectedParcel(parcel);
         setSheetSource('share_link');
       }
-    }
-    initialHydratedRef.current = true;
-  }, [parcels, initialBblFromUrl]);
+    });
+  }, [initialBblFromUrl, loadParcelByBbl]);
 
   // Keep the URL in sync with selection state (after the initial hydration).
   useEffect(() => {
@@ -331,19 +345,19 @@ export default function App() {
 
   // Browser back/forward: re-derive selection from the URL.
   useEffect(() => {
-    const onPopState = () => {
+    const onPopState = async () => {
       const bbl = parseParcelBblFromPath(window.location.pathname);
-      if (bbl) {
-        const parcel = parcels.find((p) => p.bbl === bbl) ?? null;
-        setSelectedParcel(parcel);
-        if (parcel) setSheetSource('share_link');
-      } else {
+      if (!bbl) {
         setSelectedParcel(null);
+        return;
       }
+      const parcel = await loadParcelByBbl(bbl);
+      setSelectedParcel(parcel);
+      if (parcel) setSheetSource('share_link');
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [parcels]);
+  }, [loadParcelByBbl]);
 
   // For URL-driven selection (cold-start /parcel/{bbl} or back/forward),
   // fly the map to the parcel once both the parcel AND the map are ready.
@@ -432,9 +446,33 @@ export default function App() {
         : 'Center on my location';
 
   // ---- Map ready callback --------------------------------------------------
+  // Wires up viewport-aware data fetching: every moveend coalesces (after a
+  // BBOX_DEBOUNCE_MS quiet period) into a single setBbox, which triggers a
+  // new /api/parcels?bbox=... fetch in useParcels.
   const handleMapReady = useCallback((map: MapboxMap) => {
     mapInstanceRef.current = map;
     setMapInstance(map);
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const pushCurrentBbox = () => {
+      const b = map.getBounds();
+      if (!b) return;
+      setBbox({
+        minLng: b.getWest(),
+        minLat: b.getSouth(),
+        maxLng: b.getEast(),
+        maxLat: b.getNorth(),
+      });
+    };
+    const onMoveEnd = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(pushCurrentBbox, BBOX_DEBOUNCE_MS);
+    };
+
+    // Initial fetch immediately (no debounce — the user is already looking
+    // at the map and we want markers on it as fast as possible).
+    pushCurrentBbox();
+    map.on('moveend', onMoveEnd);
   }, []);
 
   // ---- Marker click --------------------------------------------------------
@@ -458,36 +496,37 @@ export default function App() {
   }, []);
 
   // ---- Search result selected ----------------------------------------------
-  // Two-track resolution: text-token match (synchronous, free, works fine
-  // for parcels labeled by their primary street) AND NYC GeoSearch reverse
-  // lookup (one network call, authoritative for "what BBL is at this lat/lng"
-  // — fixes cross-street filings like Project Commodore at "175 Park Avenue"
-  // that DOB actually files at "122 EAST 42 STREET"). When GeoSearch returns
-  // a BBL we have data on, prefer it; otherwise fall back to text match.
+  // Two-track resolution: NYC GeoSearch reverse lookup is the authoritative
+  // resolver for "what BBL is at this lat/lng" — fixes cross-street filings
+  // like Project Commodore at "175 Park Avenue" that DOB actually files at
+  // "122 EAST 42 STREET". A local text-token match runs in parallel against
+  // whatever parcels are currently loaded as a viewport-local fallback
+  // (degraded since the bbox migration — only succeeds when the target is
+  // already in the loaded set, but harmless when it isn't because GeoSearch
+  // covers the cross-viewport case).
+  //
+  // For an alias suggestion (`alias:{bbl}`) we resolve directly via
+  // loadParcelByBbl regardless of viewport — venue names that span multiple
+  // BBLs (e.g., "Pacific Park") shouldn't snap to whatever BBL happens to
+  // be closest to the development's centroid.
   const handleSearchSelect = useCallback(
     async (suggestion: SearchSuggestion) => {
       const [lng, lat] = suggestion.center;
 
       let matched: Parcel | null = null;
 
-      // Alias suggestions encode the canonical BBL in their id
-      // (`alias:{bbl}`). Resolve directly — neither Mapbox geocoding
-      // nor GeoSearch reverse can be trusted to round-trip the user's
-      // intent for venue names that span multiple BBLs (e.g., a "Pacific
-      // Park" search shouldn't snap to whatever BBL happens to be
-      // closest to the development's centroid).
       if (suggestion.id.startsWith('alias:')) {
         const aliasBbl = suggestion.id.slice('alias:'.length);
-        matched = parcels.find((p) => p.bbl === aliasBbl) ?? null;
+        matched = await loadParcelByBbl(aliasBbl);
       } else {
         // Standard path: kick off GeoSearch in parallel with the local
-        // text-token match.
+        // text-token match against currently-loaded parcels.
         const geoBblPromise = lookupBblByLatLng(lat, lng);
         const textMatch = findMatchingParcel(suggestion, parcels);
 
         const geoBbl = await geoBblPromise;
         if (geoBbl) {
-          matched = parcels.find((p) => p.bbl === geoBbl) ?? null;
+          matched = await loadParcelByBbl(geoBbl);
         }
         if (!matched) matched = textMatch;
       }
@@ -518,7 +557,7 @@ export default function App() {
 
       clearSearch();
     },
-    [parcels, clearSearch],
+    [parcels, clearSearch, loadParcelByBbl],
   );
 
   // ---- Close sheet ---------------------------------------------------------
