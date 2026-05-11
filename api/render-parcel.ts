@@ -209,6 +209,22 @@ export default async function handler(
           /<meta name="twitter:description"[^>]*\/?>/i,
           `<meta name="twitter:description" content="${escapeAttr(ogDescription)}" />`,
         );
+
+        // Per-parcel OG image — Edge function at /api/og/{bbl} returns a
+        // 1200×630 PNG with the parcel's address and permit count. Each
+        // shared link gets its own unique unfurl preview instead of the
+        // generic site-wide og-image.png.
+        const ogImageUrl = `${origin}/api/og/${bbl}`;
+        html = replaceMeta(
+          html,
+          /<meta property="og:image"[^>]*\/?>/i,
+          `<meta property="og:image" content="${escapeAttr(ogImageUrl)}" />`,
+        );
+        html = replaceMeta(
+          html,
+          /<meta name="twitter:image"[^>]*\/?>/i,
+          `<meta name="twitter:image" content="${escapeAttr(ogImageUrl)}" />`,
+        );
       }
     } catch (err) {
       // DB read failed — log and serve the unmodified template. Better
