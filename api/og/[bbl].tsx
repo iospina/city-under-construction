@@ -19,6 +19,10 @@
 import { ImageResponse } from '@vercel/og';
 import { neon } from '@neondatabase/serverless';
 import { findVenueAliasByBbl } from '../../src/services/venueAliases.js';
+import {
+  formatStreetAddress,
+  formatBorough,
+} from '../../src/utils/formatters.js';
 
 export const config = {
   runtime: 'edge',
@@ -31,10 +35,6 @@ interface ParcelSummaryRow {
   latitude: string | null;
   longitude: string | null;
   total: number;
-}
-
-function toTitleCase(s: string): string {
-  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // Brand palette — kept in sync with src/styles/index.css and MapView marker colors.
@@ -137,8 +137,14 @@ export default async function handler(req: Request) {
       const r = rows[0];
       const houseNo = (r.house_no ?? '').trim();
       const streetName = (r.street_name ?? '').replace(/\s+/g, ' ').trim();
-      address = [houseNo, toTitleCase(streetName)].filter(Boolean).join(' ');
-      borough = r.borough ? toTitleCase(r.borough) : '';
+      // Same Title Case + street-suffix abbreviation treatment as the in-app
+      // H1, so the share card image reads "112 White St" instead of
+      // "112 WHITE STREET". Friendly-name overrides (Brooklyn Mirage,
+      // Pacific Park, etc.) are applied below and bypass this entirely.
+      address = formatStreetAddress(
+        [houseNo, streetName].filter(Boolean).join(' '),
+      );
+      borough = r.borough ? formatBorough(r.borough) : '';
       permitCount = r.total;
       const parsedLat = Number(r.latitude);
       const parsedLng = Number(r.longitude);
@@ -157,8 +163,11 @@ export default async function handler(req: Request) {
   // Aliased BBLs override the plurality-derived address with the curated
   // one — keeps Brooklyn Mirage on 140 Stewart, Pacific Park on 104
   // Carlton, Chinatown jail on 124–125 White, regardless of what DOB has
-  // filed under any single house_no.
-  if (alias) address = alias.displayAddress;
+  // filed under any single house_no. The friendly *name* still passes
+  // through unchanged (set into `venueName` above); only the secondary
+  // address subline gets the same Title Case + suffix treatment as the
+  // in-app secondary-address line.
+  if (alias) address = formatStreetAddress(alias.displayAddress);
 
   // If the DB row had no coords but the alias entry has approximate ones,
   // use those — Pacific Park and Chinatown jail both have centroid coords

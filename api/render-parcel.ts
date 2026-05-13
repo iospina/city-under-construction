@@ -30,6 +30,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { sql } from '../lib/db.js';
 import { findVenueAliasByBbl } from '../src/services/venueAliases.js';
+import { formatStreetAddress, formatBorough } from '../src/utils/formatters.js';
 
 interface ParcelSummaryRow {
   house_no: string | null;
@@ -91,10 +92,6 @@ function escapeHtml(s: string): string {
 
 function escapeAttr(s: string): string {
   return escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function toTitleCase(s: string): string {
-  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 /**
@@ -177,15 +174,22 @@ export default async function handler(
         const r = rows[0];
         const houseNo = (r.house_no ?? '').trim();
         const streetName = (r.street_name ?? '').replace(/\s+/g, ' ').trim();
-        const addr = [houseNo, streetName].filter(Boolean).join(' ');
-        const borough = r.borough ? toTitleCase(r.borough) : '';
+        // Apply the same Title Case + street-suffix abbreviation treatment
+        // the in-app H1 uses, so share cards and tab titles read as
+        // "112 White St, Manhattan" rather than "112 WHITE STREET, Manhattan".
+        const addr = formatStreetAddress(
+          [houseNo, streetName].filter(Boolean).join(' '),
+        );
+        const borough = r.borough ? formatBorough(r.borough) : '';
         const total = r.total;
         const noun = total === 1 ? 'permit' : 'permits';
 
         // If this BBL is in our hand-curated venue alias table (Brooklyn
         // Mirage, Pacific Park, etc.), use its recognizable display name
         // for the share card instead of whichever sub-address the rep
-        // row happens to surface (e.g., "135 Washington Walk").
+        // row happens to surface (e.g., "135 Washington Walk"). The
+        // alias name and borough are already correctly cased in the
+        // table — friendly-name overrides pass through unchanged.
         const alias = findVenueAliasByBbl(bbl);
         const ogTitle = alias
           ? `${alias.name}, ${alias.borough}`
