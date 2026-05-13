@@ -20,6 +20,7 @@ import PermitHistorySection from './PermitHistorySection';
 import AboutParcelSection from './AboutParcelSection';
 import { track, AnalyticsEvents } from '../services/analytics';
 import { findVenueAliasByBbl } from '../services/venueAliases';
+import { formatStreetAddress, formatBorough } from '../utils/formatters';
 
 /**
  * Where the user came from when this parcel was opened. Drives the
@@ -114,12 +115,27 @@ export default function ParcelDetailSheet({
   // and demote the rep-row address to a secondary line. For all other
   // parcels, the rep-row address stays primary and there is no secondary
   // address line.
+  // Legibility sprint (May 2026): the friendly-name override path passes
+  // through unchanged (curated titles like "Brooklyn Mirage / Avant Gardner
+  // / Pacha New York" are already cased correctly). The H1 fallback and
+  // the secondary address subtitle both get Title Case + street-suffix
+  // abbreviation so a raw "112 WHITE STREET" renders as "112 White St".
   const venueAlias = findVenueAliasByBbl(parcel.bbl);
-  const primaryHeader = venueAlias ? venueAlias.name : parcel.displayAddress;
-  const secondaryAddress = venueAlias ? parcel.displayAddress : null;
+  const primaryHeader = venueAlias
+    ? venueAlias.name
+    : formatStreetAddress(parcel.displayAddress);
+  const secondaryAddress = venueAlias
+    ? formatStreetAddress(parcel.displayAddress)
+    : null;
 
   // ---- Neighbourhood + borough context line --------------------------------
-  const contextParts = [parcel.nta, parcel.borough].filter(Boolean);
+  // The borough field arrives in ALL CAPS from the NYC API ("BROOKLYN"); the
+  // NTA field is already mixed case ("East Williamsburg"). Title-case both
+  // for safety (idempotent on already-clean input) so the line reads as
+  // "East Williamsburg, Brooklyn".
+  const contextParts = [parcel.nta, parcel.borough]
+    .filter(Boolean)
+    .map((s) => formatBorough(s));
   const contextLine = contextParts.join(', ');
 
   // ---- Share action --------------------------------------------------------

@@ -8,11 +8,61 @@
 import { useState } from 'react';
 import type { Permit } from '../types';
 import { track, AnalyticsEvents } from '../services/analytics';
+import {
+  cleanJobDescription,
+  resolveWorkPermitSuffix,
+  formatSuffixTooltip,
+} from '../utils/formatters';
 
 interface PermitCardProps {
   permit: Permit;
   /** When true, the card can expand to show detailed metadata. */
   expandable?: boolean;
+}
+
+/**
+ * Inline info-icon tooltip used to explain the trailing 2-3 letter suffix
+ * on a DOB work_permit code (e.g. the "-PMM" in "B01345542-I1-PMM").
+ *
+ * Behaviour:
+ *   - Hover (desktop) reveals the tooltip.
+ *   - Tap (mobile) toggles it; tapping again or outside dismisses.
+ *   - Keyboard focus (Tab) reveals it; blur hides.
+ *
+ * Rendered as a positioned <span> sibling to the trigger so it can float
+ * above the surrounding row layout without disturbing the flex flow.
+ */
+function SuffixTooltip({ suffix, label }: { suffix: string; label: string }) {
+  const [open, setOpen] = useState(false);
+  const text = formatSuffixTooltip({ suffix, label });
+
+  return (
+    <span className="cuc-suffix-tooltip">
+      <button
+        type="button"
+        className="cuc-suffix-tooltip-trigger"
+        aria-label={text}
+        aria-expanded={open}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+      >
+        <span className="material-symbols-outlined" aria-hidden="true">
+          info
+        </span>
+      </button>
+      {open && (
+        <span className="cuc-suffix-tooltip-content" role="tooltip">
+          {text}
+        </span>
+      )}
+    </span>
+  );
 }
 
 function formatDate(iso: string): string {
@@ -71,22 +121,38 @@ export default function PermitCard({ permit, expandable = false }: PermitCardPro
           <span className="cuc-permit-label">Filing Reason</span>
           <span className="cuc-permit-value">{permit.filingReason || '—'}</span>
         </div>
-        {permit.jobDescription && (
-          <div className="cuc-permit-field cuc-permit-field--column">
-            <span className="cuc-permit-label">Job Description</span>
-            <span className="cuc-permit-description-text">
-              {permit.jobDescription}
-            </span>
-          </div>
-        )}
+        {permit.jobDescription && (() => {
+          // Legibility sprint (May 2026): strip DOB internal routing prefix
+          // and sentence-case ALL CAPS filer text. See formatters.ts.
+          const cleaned = cleanJobDescription(permit.jobDescription);
+          if (!cleaned) return null;
+          return (
+            <div className="cuc-permit-field cuc-permit-field--column">
+              <span className="cuc-permit-label">Job Description</span>
+              <span className="cuc-permit-description-text">{cleaned}</span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Expanded metadata — only for active permits */}
-      {expandable && expanded && (
+      {expandable && expanded && (() => {
+        // Legibility sprint (May 2026): when the work_permit trailing
+        // suffix is one we have a plain-English label for, show an info
+        // icon next to the value. Suffixes we don't have a label for
+        // (-CX, -EW on their own) show no icon — silence over admitting
+        // the gap. See formatters.ts.
+        const suffix = resolveWorkPermitSuffix(permit.workPermit, permit.workType);
+        return (
         <div className="cuc-permit-details">
           <div className="cuc-permit-field">
             <span className="cuc-permit-label">Work Permit</span>
-            <span className="cuc-permit-value">{permit.workPermit || '—'}</span>
+            <span className="cuc-permit-value">
+              {permit.workPermit || '—'}
+              {suffix && (
+                <SuffixTooltip suffix={suffix.suffix} label={suffix.label} />
+              )}
+            </span>
           </div>
           <div className="cuc-permit-field">
             <span className="cuc-permit-label">Approved</span>
@@ -113,7 +179,8 @@ export default function PermitCard({ permit, expandable = false }: PermitCardPro
             <span className="cuc-permit-value">{permit.sequenceNumber}</span>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Expand / Collapse toggle — active permits only */}
       {expandable && (

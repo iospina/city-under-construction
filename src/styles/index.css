@@ -713,6 +713,69 @@ ul {
   line-height: 1;
 }
 
+/* ---- Work-permit suffix glossary tooltip ----------------------------------
+   Material Design info_outline icon shown inline beside the work_permit
+   value in the expanded permit card. Hover (desktop) or tap (mobile)
+   reveals the plain-English meaning of the trailing suffix code.
+   --------------------------------------------------------------------------- */
+
+.cuc-suffix-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.cuc-suffix-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #5f6368;
+  cursor: pointer;
+  border-radius: 50%;
+  line-height: 0;
+  transition: color 120ms;
+}
+
+.cuc-suffix-tooltip-trigger:hover,
+.cuc-suffix-tooltip-trigger:focus-visible {
+  color: #1a73e8;
+}
+
+.cuc-suffix-tooltip-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #1a73e8;
+}
+
+.cuc-suffix-tooltip-trigger .material-symbols-outlined {
+  font-size: 16px;
+  font-variation-settings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20";
+}
+
+.cuc-suffix-tooltip-content {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 10;
+  width: max-content;
+  max-width: 260px;
+  padding: 6px 10px;
+  background: #202124;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  white-space: normal;
+}
+
 /* ===========================================================================
    About Parcel metadata
    =========================================================================== */
