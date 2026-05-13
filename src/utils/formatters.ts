@@ -29,6 +29,10 @@
 //                    api/og/[bbl].tsx so share cards and tab titles
 //                    render the same Title Case + suffix treatment as
 //                    the in-app H1.
+//   May 14    2026 — follow-up: numbered-street ordinalization step
+//                    inserted between Title Case and suffix abbreviation
+//                    inside formatStreetAddress. Renders "6 AVENUE" as
+//                    "6th Ave", "42 STREET" as "42nd St", etc.
 // ---------------------------------------------------------------------------
 
 // ---- Title Case ------------------------------------------------------------
@@ -104,17 +108,127 @@ export function applyStreetSuffixes(s: string): string {
     .join('');
 }
 
+// ---- Numbered-street ordinalization ----------------------------------------
+
 /**
- * Render a street address for display: Title Case + abbreviated suffixes.
+ * Street-type words that mark the position where the preceding integer should
+ * be ordinalized. Same set as STREET_SUFFIX_MAP (excluding "saint"), but kept
+ * as its own structure so the two passes stay independent.
+ *
+ * Comparison is done on the lower-cased token, so the input being Title Cased
+ * vs uppercase doesn't matter at this point.
+ */
+const STREET_TYPE_WORDS: ReadonlySet<string> = new Set([
+  'street', 'avenue', 'place', 'road', 'drive', 'boulevard',
+  'court', 'lane', 'square', 'parkway', 'highway', 'terrace',
+]);
+
+/**
+ * Return the correct English ordinal suffix ("st" / "nd" / "rd" / "th") for
+ * a positive integer, following the irregular-teens rule:
+ *   - 11, 12, 13 (and any number ending in 11/12/13 like 111, 212, 313) → "th"
+ *   - otherwise, look at the last digit: 1 → "st", 2 → "nd", 3 → "rd", else "th"
+ */
+function ordinalSuffix(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return 'th';
+  switch (n % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
+/**
+ * Append the appropriate English ordinal suffix to a bare integer token in
+ * the street_name portion of `s`, when that integer is immediately followed
+ * by a recognized street-type word.
+ *
+ * Invariants from the brief:
+ *   - House number is never ordinalized. The rule operates on the leading
+ *     token of street_name, never on house_no.
+ *   - Already-ordinalized tokens are skipped (the pure-integer regex
+ *     ^\d+$ won't match "23rd", "6TH", etc.).
+ *   - Named streets containing numbers ("Route 9A", "Avenue C") are not
+ *     ordinalized because either the token isn't a pure integer or the
+ *     immediately-following token isn't a street-type word.
+ *
+ * Position rule (heuristic):
+ *   - 3+ tokens: the first non-whitespace token is the house_no; the
+ *     leading street_name token is the second. Ordinalize position 1
+ *     if it's a pure integer and position 2 is a street-type word.
+ *   - exactly 2 tokens: the input is street_name only (no house). The
+ *     leading street_name token is the first. Ordinalize position 0 if
+ *     it's a pure integer and position 1 is a street-type word.
+ *   - <2 tokens: nothing to do.
+ *
+ * This means a directional-prefixed numbered street like "100 East 6 Street"
+ * is NOT ordinalized (position 1 is "East", not the integer). The brief's
+ * "first token of street_name" rule is strict on this — directional cases
+ * are out of scope for this sprint.
+ *
+ * Examples (after Title Case):
+ *   "800 6 Avenue"        → "800 6th Avenue"
+ *   "100 42 Street"       → "100 42nd Street"
+ *   "100 103 Street"      → "100 103rd Street"
+ *   "100 111 Street"      → "100 111th Street"  (irregular teens)
+ *   "100 East 6 Street"   → unchanged (6 not at leading street_name position)
+ *   "100 Stewart Avenue"  → unchanged ("Stewart" not an integer)
+ *   "100 23rd Street"     → unchanged ("23rd" not pure integer — no double process)
+ */
+export function applyOrdinalSuffix(s: string): string {
+  if (!s) return s;
+
+  const parts = s.split(/(\s+)/); // preserves separators as array items
+  const nonWsIdx: number[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i].length > 0 && !/^\s+$/.test(parts[i])) nonWsIdx.push(i);
+  }
+
+  if (nonWsIdx.length < 2) return s;
+
+  // 2 tokens → street_name only, ordinal candidate at index 0
+  // 3+ tokens → house_no at 0, ordinal candidate at index 1
+  const candPos = nonWsIdx.length === 2 ? 0 : 1;
+  const typePos = candPos + 1;
+  if (typePos >= nonWsIdx.length) return s;
+
+  const candidate = parts[nonWsIdx[candPos]];
+  const typeWord = parts[nonWsIdx[typePos]];
+
+  if (!/^\d+$/.test(candidate)) return s;
+  if (!STREET_TYPE_WORDS.has(typeWord.toLowerCase())) return s;
+
+  const n = parseInt(candidate, 10);
+  if (!Number.isFinite(n) || n <= 0) return s;
+
+  parts[nonWsIdx[candPos]] = candidate + ordinalSuffix(n);
+  return parts.join('');
+}
+
+/**
+ * Render a street address for display: Title Case + ordinal suffix on
+ * numbered streets + abbreviated street-type words.
+ *
+ * Order of operations matters: Title Case first (so the ordinalization
+ * pass can recognize street-type words by their canonical casing), then
+ * ordinalization (which still operates on the un-abbreviated form so
+ * "Avenue" / "Street" match the lookup set), then abbreviation (which
+ * collapses to "Ave" / "St").
  *
  * Examples:
  *   "112 WHITE STREET"      → "112 White St"
  *   "595 Dean Street"       → "595 Dean St"
  *   "104 CARLTON AVENUE"    → "104 Carlton Ave"
  *   "SAINT MARKS AVENUE"    → "St Marks Ave"
+ *   "800 6 AVENUE"          → "800 6th Ave"
+ *   "100 42 STREET"         → "100 42nd St"
+ *   "1 103 STREET"          → "1 103rd St"
+ *   "100 11 AVENUE"         → "100 11th Ave"
  */
 export function formatStreetAddress(s: string): string {
-  return applyStreetSuffixes(toTitleCase(s));
+  return applyStreetSuffixes(applyOrdinalSuffix(toTitleCase(s)));
 }
 
 /**
