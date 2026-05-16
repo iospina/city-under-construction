@@ -1,9 +1,9 @@
-# CityUnderConstruction
+# City Permits
 
 A civic data tool that surfaces NYC's currently-active construction permits
 on a map. Search any address and see what's actually being built there.
 
-Live: [city-under-construction.vercel.app](https://city-under-construction.vercel.app)
+Live: [citypermits.vercel.app](https://citypermits.vercel.app)
 
 ## Architecture
 

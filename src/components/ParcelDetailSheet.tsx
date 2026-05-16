@@ -145,7 +145,7 @@ export default function ParcelDetailSheet({
   // `share_link_copied` so we can measure share-flow engagement.
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/parcel/${parcel.bbl}`;
-    const shareTitle = `CityUnderConstruction — ${parcel.displayAddress}`;
+    const shareTitle = `City Permits — ${parcel.displayAddress}`;
     const shareText = contextLine
       ? `${parcel.displayAddress} — ${contextLine}`
       : parcel.displayAddress;

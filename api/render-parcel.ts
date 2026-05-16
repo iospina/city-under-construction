@@ -114,7 +114,7 @@ function deriveOriginFromRequest(req: VercelRequest): string {
   const host =
     (req.headers['x-forwarded-host'] as string | undefined) ??
     (req.headers.host as string | undefined) ??
-    'cityunderconstruction.nyc';
+    'citypermits.vercel.app';
   return `${proto}://${host}`;
 }
 
@@ -195,15 +195,15 @@ export default async function handler(
           ? `${alias.name}, ${alias.borough}`
           : borough
           ? `${addr}, ${borough}`
-          : addr || 'CityUnderConstruction';
-        const ogDescription = `${total} active construction ${noun} at this address. CityUnderConstruction shows the public DOB record for what's actually being built across NYC.`;
+          : addr || 'City Permits';
+        const ogDescription = `${total} active construction ${noun} at this address. City Permits shows the public DOB record for what's actually being built across NYC.`;
         const origin = deriveOriginFromRequest(req);
         const ogUrl = `${origin}/parcel/${bbl}`;
 
         html = replaceMeta(
           html,
           /<title>[^<]*<\/title>/,
-          `<title>${escapeHtml(`${ogTitle} — ${total} active ${noun} | CityUnderConstruction`)}</title>`,
+          `<title>${escapeHtml(`${ogTitle} — ${total} active ${noun} | City Permits`)}</title>`,
         );
         html = replaceMeta(
           html,

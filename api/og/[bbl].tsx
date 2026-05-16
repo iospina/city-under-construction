@@ -182,7 +182,7 @@ export default async function handler(req: Request) {
       ? buildMapUrl(lat, lng, mapboxToken)
       : null;
 
-  const displayHeadline = venueName || address || 'CityUnderConstruction';
+  const displayHeadline = venueName || address || 'City Permits';
   const displaySubline = venueName
     ? address
       ? `${address} · ${borough}`
@@ -226,7 +226,7 @@ export default async function handler(req: Request) {
               letterSpacing: -0.5,
             }}
           >
-            CityUnderConstruction
+            City Permits
           </div>
 
           {/* Headline + subline take the remaining vertical space */}
