@@ -82,7 +82,7 @@ export default async function handler(req: Request) {
   }
 
   // Best-effort DB lookup. If anything fails, we still render a generic
-  // CUC-branded card rather than 500-ing — a poor preview is better than
+  // City Permits-branded card rather than 500-ing — a poor preview is better than
   // a broken share link.
   let address = '';
   let borough = '';

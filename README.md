@@ -8,8 +8,8 @@ Live: [citypermits.vercel.app](https://citypermits.vercel.app)
 ## Architecture
 
 A daily Vercel Cron job pulls every active permit from the NYC DOB NOW
-dataset (`rbx6-tga4`) into a CUC-owned Postgres database (Neon). The Vite +
-React client reads from CUC's API endpoints, never directly from DOB NOW.
+dataset (`rbx6-tga4`) into a City Permits-owned Postgres database (Neon). The Vite +
+React client reads from City Permits' API endpoints, never directly from DOB NOW.
 
 ```
                                  +---------------------+
@@ -31,7 +31,7 @@ React client reads from CUC's API endpoints, never directly from DOB NOW.
                                      React client (Vite)
 ```
 
-"Active" matches CUC's product definition exactly:
+"Active" matches City Permits' product definition exactly:
 `permit_status = 'Permit Issued' AND (expired_date IS NULL OR expired_date > today)`.
 
 ## Local development
@@ -99,10 +99,10 @@ src/                     Vite + React client
 
 The single source of truth is the
 [DOB NOW: Build Approved Permits](https://data.cityofnewyork.us/Housing-Development/DOB-NOW-Build-Approved-Permits/rbx6-tga4)
-dataset. CUC does not pull the legacy DOB BIS (`ipu4-2q9a`) feed, the
+dataset. City Permits does not pull the legacy DOB BIS (`ipu4-2q9a`) feed, the
 Electrical, Elevator, or LAA datasets.
 
-The May 2026 audit (Notion: *CUC Permit Data Audit, May 2026*) documents
+The May 2026 audit (Notion: *City Permits — Permit Data Audit, May 2026*) documents
 how the previous browser-only architecture silently truncated to ~22 days
 of issuance citywide. The architecture above eliminates that truncation as
 a structural limit.

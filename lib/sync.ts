@@ -3,7 +3,7 @@
 // Pure function that pulls all currently active permits from DOB NOW and
 // atomically replaces the contents of the `permits` table.
 //
-// "Currently active" matches CUC's product definition exactly:
+// "Currently active" matches City Permits' product definition exactly:
 //   permit_status = 'Permit Issued'
 //   AND (expired_date IS NULL OR expired_date > today)
 //

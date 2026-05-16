@@ -29,11 +29,11 @@ export default function PermitHistorySection({
   };
 
   return (
-    <div className="cuc-section">
-      <button className="cuc-section-header" onClick={toggle}>
-        <span className="cuc-section-title">Permit History</span>
+    <div className="cp-section">
+      <button className="cp-section-header" onClick={toggle}>
+        <span className="cp-section-title">Permit History</span>
         <span
-          className="material-symbols-outlined cuc-chevron"
+          className="material-symbols-outlined cp-chevron"
           style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
         >
           expand_more
@@ -41,9 +41,9 @@ export default function PermitHistorySection({
       </button>
 
       {expanded && (
-        <div className="cuc-section-body cuc-section-animate">
+        <div className="cp-section-body cp-section-animate">
           {permits.length === 0 ? (
-            <p className="cuc-section-empty">No permit history available.</p>
+            <p className="cp-section-empty">No permit history available.</p>
           ) : (
             permits.map((p, i) => (
               <PermitCard

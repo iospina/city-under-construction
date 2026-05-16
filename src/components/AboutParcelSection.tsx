@@ -34,11 +34,11 @@ export default function AboutParcelSection({ parcel }: AboutParcelSectionProps) 
   ];
 
   return (
-    <div className="cuc-section">
-      <button className="cuc-section-header" onClick={toggle}>
-        <span className="cuc-section-title">About this Parcel</span>
+    <div className="cp-section">
+      <button className="cp-section-header" onClick={toggle}>
+        <span className="cp-section-title">About this Parcel</span>
         <span
-          className="material-symbols-outlined cuc-chevron"
+          className="material-symbols-outlined cp-chevron"
           style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
         >
           expand_more
@@ -46,11 +46,11 @@ export default function AboutParcelSection({ parcel }: AboutParcelSectionProps) 
       </button>
 
       {expanded && (
-        <div className="cuc-section-body cuc-section-animate">
+        <div className="cp-section-body cp-section-animate">
           {fields.map((f) => (
-            <div className="cuc-meta-row" key={f.label}>
-              <span className="cuc-meta-label">{f.label}</span>
-              <span className="cuc-meta-value">{f.value || '—'}</span>
+            <div className="cp-meta-row" key={f.label}>
+              <span className="cp-meta-label">{f.label}</span>
+              <span className="cp-meta-value">{f.value || '—'}</span>
             </div>
           ))}
         </div>

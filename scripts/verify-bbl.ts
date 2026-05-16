@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // scripts/verify-bbl.ts
-// Diagnostic: print every permit currently in the CUC database at a BBL.
+// Diagnostic: print every permit currently in the City Permits database at a BBL.
 //
 //   npm run db:verify -- 3029770001        # 140 Stewart Avenue (Brooklyn Mirage)
 //   npm run db:verify -- 1001880001        # 124 White Street    (Chinatown Jail)

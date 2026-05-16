@@ -1,5 +1,5 @@
 -- ---------------------------------------------------------------------------
--- CUC permits schema
+-- City Permits — permits schema
 -- ---------------------------------------------------------------------------
 -- Mirrors the fields the client today uses from DOB NOW (rbx6-tga4).
 -- All permit-level columns stored as TEXT — the client receives strings today

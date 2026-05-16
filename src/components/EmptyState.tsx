@@ -17,8 +17,8 @@ export default function EmptyState({ parcelId }: EmptyStateProps) {
   }, [parcelId]);
 
   return (
-    <div className="cuc-empty-state">
-      <p className="cuc-empty-text">
+    <div className="cp-empty-state">
+      <p className="cp-empty-text">
         No active construction permits at this address
       </p>
     </div>

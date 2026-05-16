@@ -384,8 +384,8 @@ export default function App() {
     try {
       return new Set(
         Object.keys(localStorage)
-          .filter(k => k.startsWith('cuc_saved_') && localStorage.getItem(k) === 'true')
-          .map(k => k.replace('cuc_saved_', ''))
+          .filter(k => k.startsWith('cp_saved_') && localStorage.getItem(k) === 'true')
+          .map(k => k.replace('cp_saved_', ''))
       );
     } catch {
       return new Set();
@@ -431,9 +431,9 @@ export default function App() {
   }, []);
 
   const locateBtnClass = [
-    'cuc-locate-btn',
-    locateState === 'loading' ? 'cuc-locate-btn--loading' : '',
-    locateState === 'denied' ? 'cuc-locate-btn--denied' : '',
+    'cp-locate-btn',
+    locateState === 'loading' ? 'cp-locate-btn--loading' : '',
+    locateState === 'denied' ? 'cp-locate-btn--denied' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -566,7 +566,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className={`cuc-app${selectedParcel ? ' cuc-app--sheet-open' : ''}`}>
+    <div className={`cp-app${selectedParcel ? ' cp-app--sheet-open' : ''}`}>
       {/* Map — always behind everything */}
       <MapView
         parcels={mappableParcels}
@@ -583,8 +583,8 @@ export default function App() {
            Desktop: repositioned by CSS to float top-left as a search container.
                     Slides off-screen when panel is open.
       ----------------------------------------------------------------------- */}
-      <div className={`cuc-bottom-bar${selectedParcel ? ' cuc-bottom-bar--panel-open' : ''}`}>
-        <div className="cuc-search-row">
+      <div className={`cp-bottom-bar${selectedParcel ? ' cp-bottom-bar--panel-open' : ''}`}>
+        <div className="cp-search-row">
           <SearchBar
             query={query}
             onQueryChange={setQuery}
@@ -616,8 +616,8 @@ export default function App() {
       </div>
 
       {/* Loading / error indicators */}
-      {loading && <div className="cuc-loading">Loading permits…</div>}
-      {error && <div className="cuc-error">Error: {error}</div>}
+      {loading && <div className="cp-loading">Loading permits…</div>}
+      {error && <div className="cp-error">Error: {error}</div>}
 
       {/* Parcel detail sheet — conditional */}
       {selectedParcel && (
@@ -630,13 +630,13 @@ export default function App() {
       )}
 
       {/* Attribution — bottom-left, beside Mapbox attribution */}
-      <div className="cuc-attribution">
+      <div className="cp-attribution">
         <span>Built by </span>
         <a
           href="https://ignacioospina.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="cuc-attribution-link"
+          className="cp-attribution-link"
         >
           Ignacio Ospina
         </a>
@@ -644,7 +644,7 @@ export default function App() {
           href="https://www.linkedin.com/in/ignacioospina/"
           target="_blank"
           rel="noopener noreferrer"
-          className="cuc-attribution-linkedin"
+          className="cp-attribution-linkedin"
           aria-label="LinkedIn"
         >
           <svg

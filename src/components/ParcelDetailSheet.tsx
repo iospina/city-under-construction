@@ -47,7 +47,7 @@ let timeToParcelDetailFired = false;
  * True if the current page session was loaded directly (cold start) rather
  * than restored from history or arrived via a back/forward navigation. Used
  * to gate `time_to_parcel_detail` so we only measure the launch-arc-relevant
- * "user landed at a CUC URL and saw a permit" path.
+ * "user landed at a City Permits URL and saw a permit" path.
  */
 function isColdStartSession(): boolean {
   try {
@@ -71,7 +71,7 @@ export default function ParcelDetailSheet({
 
   const [bookmarked, setBookmarked] = useState<boolean>(() => {
     try {
-      return localStorage.getItem(`cuc_saved_${parcel.parcelId}`) === 'true';
+      return localStorage.getItem(`cp_saved_${parcel.parcelId}`) === 'true';
     } catch {
       return false;
     }
@@ -186,9 +186,9 @@ export default function ParcelDetailSheet({
       const next = !prev;
       try {
         if (next) {
-          localStorage.setItem(`cuc_saved_${parcel.parcelId}`, 'true');
+          localStorage.setItem(`cp_saved_${parcel.parcelId}`, 'true');
         } else {
-          localStorage.removeItem(`cuc_saved_${parcel.parcelId}`);
+          localStorage.removeItem(`cp_saved_${parcel.parcelId}`);
         }
       } catch {
         // localStorage unavailable (private mode, storage full) — no-op
@@ -203,14 +203,14 @@ export default function ParcelDetailSheet({
   };
 
   return (
-    <div className="cuc-sheet-overlay">
-      <div className="cuc-sheet">
+    <div className="cp-sheet-overlay">
+      <div className="cp-sheet">
         {/* ---- Header ---- */}
-        <div className="cuc-sheet-header">
-          <div className="cuc-sheet-header-actions">
+        <div className="cp-sheet-header">
+          <div className="cp-sheet-header-actions">
             {/* Bookmark: filled when saved, outlined when not */}
             <button
-              className={`cuc-icon-btn${bookmarked ? ' cuc-icon-btn--active' : ''}`}
+              className={`cp-icon-btn${bookmarked ? ' cp-icon-btn--active' : ''}`}
               aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this parcel'}
               title={bookmarked ? 'Remove bookmark' : 'Bookmark'}
               onClick={handleBookmark}
@@ -229,7 +229,7 @@ export default function ParcelDetailSheet({
 
             {/* Share */}
             <button
-              className="cuc-icon-btn"
+              className="cp-icon-btn"
               aria-label="Share this parcel"
               title="Share"
               onClick={handleShare}
@@ -239,7 +239,7 @@ export default function ParcelDetailSheet({
 
             {/* Close */}
             <button
-              className="cuc-icon-btn"
+              className="cp-icon-btn"
               aria-label="Close"
               title="Close"
               onClick={handleClose}
@@ -248,27 +248,27 @@ export default function ParcelDetailSheet({
             </button>
           </div>
 
-          <h2 className="cuc-sheet-address">{primaryHeader}</h2>
+          <h2 className="cp-sheet-address">{primaryHeader}</h2>
           {secondaryAddress && (
-            <p className="cuc-sheet-context">{secondaryAddress}</p>
+            <p className="cp-sheet-context">{secondaryAddress}</p>
           )}
           {contextLine && (
-            <p className="cuc-sheet-context">{contextLine}</p>
+            <p className="cp-sheet-context">{contextLine}</p>
           )}
         </div>
 
         {/* ---- Scrollable content ---- */}
-        <div className="cuc-sheet-content">
+        <div className="cp-sheet-content">
           {/* Section 1: What's Being Built Here (open by default, collapsible) */}
-          <div className="cuc-section">
+          <div className="cp-section">
             <button
-              className="cuc-section-header"
+              className="cp-section-header"
               onClick={() => setActiveOpen((o) => !o)}
               aria-expanded={activeOpen}
             >
-              <span className="cuc-section-title">What's Being Built Here</span>
+              <span className="cp-section-title">What's Being Built Here</span>
               <span
-                className="material-symbols-outlined cuc-chevron"
+                className="material-symbols-outlined cp-chevron"
                 aria-hidden="true"
                 style={{ transform: activeOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
               >
@@ -277,7 +277,7 @@ export default function ParcelDetailSheet({
             </button>
 
             {activeOpen && (
-              <div className="cuc-section-body cuc-section-animate">
+              <div className="cp-section-body cp-section-animate">
                 {parcel.activePermits.length > 0 ? (
                   parcel.activePermits.map((p, i) => (
                     <PermitCard

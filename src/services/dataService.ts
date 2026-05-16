@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
 // dataService.ts
-// Fetches permit rows from the CUC-owned API endpoint.
+// Fetches permit rows from the City Permits-owned API endpoint.
 //
 // History: pre-Brooklyn-Mirage-launch this file fetched directly from the
 // NYC Open Data API (rbx6-tga4) from the browser, capped at 10 000 rows.
 // The May 2026 audit revealed that cap was silently dropping ~90% of active
 // permits citywide. The fix was structural: a server-side daily sync into a
-// CUC-owned Postgres database, with the client reading from a CUC endpoint.
+// City Permits-owned Postgres database, with the client reading from a City Permits endpoint.
 // See db/schema.sql, lib/sync.ts, and api/parcels.ts.
 //
 // Slim-payload migration (May 2026): the client now requests permits by
@@ -30,7 +30,7 @@ export interface Bbox {
 /**
  * Fetch the active permits whose coordinates fall inside `bbox`.
  *
- * "Active" matches CUC's product definition exactly:
+ * "Active" matches City Permits' product definition exactly:
  *   permit_status = 'Permit Issued'
  *   AND (expired_date IS NULL OR expired_date > today)
  *

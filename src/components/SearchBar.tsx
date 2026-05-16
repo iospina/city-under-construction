@@ -48,14 +48,14 @@ export default function SearchBar({
   };
 
   return (
-    <div className="cuc-search-container">
-      <div className="cuc-search-bar">
-        <span className="material-symbols-outlined cuc-search-icon">
+    <div className="cp-search-container">
+      <div className="cp-search-bar">
+        <span className="material-symbols-outlined cp-search-icon">
           search
         </span>
         <input
           ref={inputRef}
-          className="cuc-search-input"
+          className="cp-search-input"
           type="text"
           placeholder="Search an address in NYC"
           value={query}
@@ -63,18 +63,18 @@ export default function SearchBar({
         />
         {query && (
           <button
-            className="cuc-search-clear"
+            className="cp-search-clear"
             onClick={handleClear}
             aria-label="Clear search"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
         )}
-        {loading && <span className="cuc-search-spinner" />}
+        {loading && <span className="cp-search-spinner" />}
       </div>
 
       {suggestions.length > 0 && (
-        <ul className="cuc-search-results">
+        <ul className="cp-search-results">
           {suggestions.map((s) => {
             // Primary: full first comma-segment of place_name. Mapbox's
             // `text` field strips the house number ("Columbia Street"
@@ -89,7 +89,7 @@ export default function SearchBar({
             return (
               <li key={s.id}>
                 <button
-                  className="cuc-search-result-item"
+                  className="cp-search-result-item"
                   onClick={() => {
                     track(AnalyticsEvents.SEARCH_RESULT_SELECTED, {
                       placeName: s.placeName,
@@ -97,10 +97,10 @@ export default function SearchBar({
                     onSelect(s);
                   }}
                 >
-                  <div className="cuc-result-text">
-                    <span className="cuc-result-primary">{primary}</span>
+                  <div className="cp-result-text">
+                    <span className="cp-result-primary">{primary}</span>
                     {secondary && (
-                      <span className="cuc-result-secondary">{secondary}</span>
+                      <span className="cp-result-secondary">{secondary}</span>
                     )}
                   </div>
                 </button>

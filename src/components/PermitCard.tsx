@@ -37,10 +37,10 @@ function SuffixTooltip({ suffix, label }: { suffix: string; label: string }) {
   const text = formatSuffixTooltip({ suffix, label });
 
   return (
-    <span className="cuc-suffix-tooltip">
+    <span className="cp-suffix-tooltip">
       <button
         type="button"
-        className="cuc-suffix-tooltip-trigger"
+        className="cp-suffix-tooltip-trigger"
         aria-label={text}
         aria-expanded={open}
         onClick={(e) => {
@@ -57,7 +57,7 @@ function SuffixTooltip({ suffix, label }: { suffix: string; label: string }) {
         </span>
       </button>
       {open && (
-        <span className="cuc-suffix-tooltip-content" role="tooltip">
+        <span className="cp-suffix-tooltip-content" role="tooltip">
           {text}
         </span>
       )}
@@ -95,31 +95,31 @@ export default function PermitCard({ permit, expandable = false }: PermitCardPro
   };
 
   return (
-    <div className="cuc-permit-card">
+    <div className="cp-permit-card">
       {/* Summary — always visible */}
-      <div className="cuc-permit-summary">
-        <div className="cuc-permit-header">
-          <span className="cuc-permit-category">
+      <div className="cp-permit-summary">
+        <div className="cp-permit-header">
+          <span className="cp-permit-category">
             {permit.workType || permit.workPermitText || 'Permit'}
           </span>
-          {permit.isActive && <span className="cuc-permit-badge">Active</span>}
+          {permit.isActive && <span className="cp-permit-badge">Active</span>}
         </div>
 
-        <div className="cuc-permit-field">
-          <span className="cuc-permit-label">Work Status</span>
-          <span className="cuc-permit-value">{permit.permitStatus || '—'}</span>
+        <div className="cp-permit-field">
+          <span className="cp-permit-label">Work Status</span>
+          <span className="cp-permit-value">{permit.permitStatus || '—'}</span>
         </div>
-        <div className="cuc-permit-field">
-          <span className="cuc-permit-label">Issued</span>
-          <span className="cuc-permit-value">{formatDate(permit.issuedDate)}</span>
+        <div className="cp-permit-field">
+          <span className="cp-permit-label">Issued</span>
+          <span className="cp-permit-value">{formatDate(permit.issuedDate)}</span>
         </div>
-        <div className="cuc-permit-field">
-          <span className="cuc-permit-label">Expires</span>
-          <span className="cuc-permit-value">{formatDate(permit.expiredDate)}</span>
+        <div className="cp-permit-field">
+          <span className="cp-permit-label">Expires</span>
+          <span className="cp-permit-value">{formatDate(permit.expiredDate)}</span>
         </div>
-        <div className="cuc-permit-field">
-          <span className="cuc-permit-label">Filing Reason</span>
-          <span className="cuc-permit-value">{permit.filingReason || '—'}</span>
+        <div className="cp-permit-field">
+          <span className="cp-permit-label">Filing Reason</span>
+          <span className="cp-permit-value">{permit.filingReason || '—'}</span>
         </div>
         {permit.jobDescription && (() => {
           // Legibility sprint (May 2026): strip DOB internal routing prefix
@@ -127,9 +127,9 @@ export default function PermitCard({ permit, expandable = false }: PermitCardPro
           const cleaned = cleanJobDescription(permit.jobDescription);
           if (!cleaned) return null;
           return (
-            <div className="cuc-permit-field cuc-permit-field--column">
-              <span className="cuc-permit-label">Job Description</span>
-              <span className="cuc-permit-description-text">{cleaned}</span>
+            <div className="cp-permit-field cp-permit-field--column">
+              <span className="cp-permit-label">Job Description</span>
+              <span className="cp-permit-description-text">{cleaned}</span>
             </div>
           );
         })()}
@@ -144,39 +144,39 @@ export default function PermitCard({ permit, expandable = false }: PermitCardPro
         // the gap. See formatters.ts.
         const suffix = resolveWorkPermitSuffix(permit.workPermit, permit.workType);
         return (
-        <div className="cuc-permit-details">
-          <div className="cuc-permit-field">
-            <span className="cuc-permit-label">Work Permit</span>
-            <span className="cuc-permit-value">
+        <div className="cp-permit-details">
+          <div className="cp-permit-field">
+            <span className="cp-permit-label">Work Permit</span>
+            <span className="cp-permit-value">
               {permit.workPermit || '—'}
               {suffix && (
                 <SuffixTooltip suffix={suffix.suffix} label={suffix.label} />
               )}
             </span>
           </div>
-          <div className="cuc-permit-field">
-            <span className="cuc-permit-label">Approved</span>
-            <span className="cuc-permit-value">{formatDate(permit.approvedDate)}</span>
+          <div className="cp-permit-field">
+            <span className="cp-permit-label">Approved</span>
+            <span className="cp-permit-value">{formatDate(permit.approvedDate)}</span>
           </div>
-          <div className="cuc-permit-field">
-            <span className="cuc-permit-label">Work Location</span>
-            <span className="cuc-permit-value">{permit.workLocation || '—'}</span>
+          <div className="cp-permit-field">
+            <span className="cp-permit-label">Work Location</span>
+            <span className="cp-permit-value">{permit.workLocation || '—'}</span>
           </div>
-          <div className="cuc-permit-field">
-            <span className="cuc-permit-label">Estimated Job Cost</span>
-            <span className="cuc-permit-value">{formatCurrency(permit.estimatedJobCost)}</span>
+          <div className="cp-permit-field">
+            <span className="cp-permit-label">Estimated Job Cost</span>
+            <span className="cp-permit-value">{formatCurrency(permit.estimatedJobCost)}</span>
           </div>
-          <div className="cuc-permit-field">
-            <span className="cuc-permit-label">Tracking Number</span>
-            <span className="cuc-permit-value">{permit.trackingNumber || '—'}</span>
+          <div className="cp-permit-field">
+            <span className="cp-permit-label">Tracking Number</span>
+            <span className="cp-permit-value">{permit.trackingNumber || '—'}</span>
           </div>
-          <div className="cuc-permit-field">
-            <span className="cuc-permit-label">Job Filing Number</span>
-            <span className="cuc-permit-value">{permit.jobFilingNumber || '—'}</span>
+          <div className="cp-permit-field">
+            <span className="cp-permit-label">Job Filing Number</span>
+            <span className="cp-permit-value">{permit.jobFilingNumber || '—'}</span>
           </div>
-          <div className="cuc-permit-field">
-            <span className="cuc-permit-label">Sequence Number</span>
-            <span className="cuc-permit-value">{permit.sequenceNumber}</span>
+          <div className="cp-permit-field">
+            <span className="cp-permit-label">Sequence Number</span>
+            <span className="cp-permit-value">{permit.sequenceNumber}</span>
           </div>
         </div>
         );
@@ -185,15 +185,15 @@ export default function PermitCard({ permit, expandable = false }: PermitCardPro
       {/* Expand / Collapse toggle — active permits only */}
       {expandable && (
         <button
-          className="cuc-permit-toggle"
+          className="cp-permit-toggle"
           onClick={toggleExpand}
           aria-expanded={expanded}
         >
-          <span className="cuc-permit-toggle-label">
+          <span className="cp-permit-toggle-label">
             {expanded ? 'Collapse Details' : 'Expand Details'}
           </span>
           <span
-            className="material-symbols-outlined cuc-permit-toggle-chevron"
+            className="material-symbols-outlined cp-permit-toggle-chevron"
             aria-hidden="true"
             style={{
               transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',

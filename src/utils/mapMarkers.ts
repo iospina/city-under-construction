@@ -16,7 +16,7 @@
  */
 export function createMarkerElement(isSelected = false, isSaved = false): HTMLDivElement {
   const el = document.createElement('div');
-  el.className = 'cuc-marker';
+  el.className = 'cp-marker';
 
   // Determine size, color, and shadow based on state.
   // Selected takes priority over saved.
@@ -70,7 +70,7 @@ export function createMarkerElement(isSelected = false, isSaved = false): HTMLDi
  */
 export function createLocationMarkerElement(): HTMLDivElement {
   const el = document.createElement('div');
-  el.className = 'cuc-location-marker';
+  el.className = 'cp-location-marker';
   el.style.width = '28px';
   el.style.height = '28px';
   el.style.cursor = 'default';

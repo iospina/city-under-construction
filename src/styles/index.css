@@ -38,7 +38,7 @@ ul {
 
 /* ---- App shell ----------------------------------------------------------- */
 
-.cuc-app {
+.cp-app {
   position: relative;
   height: 100%;
   width: 100%;
@@ -47,8 +47,8 @@ ul {
 
 /* ---- Loading / error banners --------------------------------------------- */
 
-.cuc-loading,
-.cuc-error {
+.cp-loading,
+.cp-error {
   position: absolute;
   bottom: 100px;
   left: 50%;
@@ -62,7 +62,7 @@ ul {
   white-space: nowrap;
 }
 
-.cuc-error {
+.cp-error {
   color: #b71c1c;
 }
 
@@ -72,7 +72,7 @@ ul {
    Desktop: repositioned to float top-left as a plain search container.
    =========================================================================== */
 
-.cuc-bottom-bar {
+.cp-bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -85,13 +85,13 @@ ul {
 }
 
 /* Search row layout — search container and locate button side by side */
-.cuc-search-row {
+.cp-search-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.cuc-search-row .cuc-search-container {
+.cp-search-row .cp-search-container {
   flex: 1;
   position: relative;
   width: auto;
@@ -101,7 +101,7 @@ ul {
 }
 
 /* On mobile, search results float ABOVE the search bar */
-.cuc-search-row .cuc-search-results {
+.cp-search-row .cp-search-results {
   position: absolute;
   bottom: calc(100% + 8px);
   top: auto;
@@ -126,8 +126,8 @@ ul {
    Search
    =========================================================================== */
 
-.cuc-search-container {
-  /* Standalone positioning (mobile overridden above when inside .cuc-bottom-bar) */
+.cp-search-container {
+  /* Standalone positioning (mobile overridden above when inside .cp-bottom-bar) */
   position: absolute;
   top: 16px;
   left: 16px;
@@ -136,7 +136,7 @@ ul {
   max-width: 480px;
 }
 
-.cuc-search-bar {
+.cp-search-bar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -146,13 +146,13 @@ ul {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.cuc-search-icon {
+.cp-search-icon {
   color: #5f6368;
   font-size: 22px;
   flex-shrink: 0;
 }
 
-.cuc-search-input {
+.cp-search-input {
   flex: 1;
   border: none;
   outline: none;
@@ -162,11 +162,11 @@ ul {
   min-width: 0;
 }
 
-.cuc-search-input::placeholder {
+.cp-search-input::placeholder {
   color: #9aa0a6;
 }
 
-.cuc-search-clear {
+.cp-search-clear {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -176,11 +176,11 @@ ul {
   flex-shrink: 0;
 }
 
-.cuc-search-clear:hover {
+.cp-search-clear:hover {
   background: #f1f3f4;
 }
 
-.cuc-search-spinner {
+.cp-search-spinner {
   width: 18px;
   height: 18px;
   border: 2px solid #dadce0;
@@ -198,7 +198,7 @@ ul {
 
 /* ---- Search results (desktop default — appears below bar) ---------------- */
 
-.cuc-search-results {
+.cp-search-results {
   margin-top: 8px;
   background: #fff;
   border-radius: 16px;
@@ -218,7 +218,7 @@ ul {
   }
 }
 
-.cuc-search-result-item {
+.cp-search-result-item {
   display: flex;
   align-items: flex-start;
   width: 100%;
@@ -227,23 +227,23 @@ ul {
   transition: background 120ms;
 }
 
-.cuc-search-result-item + .cuc-search-result-item {
+.cp-search-result-item + .cp-search-result-item {
   border-top: 1px solid #f1f3f4;
 }
 
-.cuc-search-result-item:hover {
+.cp-search-result-item:hover {
   background: #f1f3f4;
 }
 
 /* Two-line result layout */
-.cuc-result-text {
+.cp-result-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
 }
 
-.cuc-result-primary {
+.cp-result-primary {
   font-size: 15px;
   font-weight: 600;
   color: #202124;
@@ -252,7 +252,7 @@ ul {
   text-overflow: ellipsis;
 }
 
-.cuc-result-secondary {
+.cp-result-secondary {
   font-size: 13px;
   color: #5f6368;
   white-space: nowrap;
@@ -262,11 +262,11 @@ ul {
 
 /* ===========================================================================
    Locate button
-   Mobile:  lives inside .cuc-bottom-controls (flows with the controls row).
-   Desktop: a separate .cuc-locate-btn--desktop floats bottom-right on the map.
+   Mobile:  lives inside .cp-bottom-controls (flows with the controls row).
+   Desktop: a separate .cp-locate-btn--desktop floats bottom-right on the map.
    =========================================================================== */
 
-.cuc-locate-btn {
+.cp-locate-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,28 +280,28 @@ ul {
   flex-shrink: 0;
 }
 
-.cuc-locate-btn:hover:not(:disabled) {
+.cp-locate-btn:hover:not(:disabled) {
   background: #f1f3f4;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
 }
 
-.cuc-locate-btn:focus-visible {
+.cp-locate-btn:focus-visible {
   box-shadow: 0 0 0 2px #1a73e8, 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.cuc-locate-btn:active:not(:disabled) {
+.cp-locate-btn:active:not(:disabled) {
   background: #e8eaed;
 }
 
-.cuc-locate-btn:disabled {
+.cp-locate-btn:disabled {
   cursor: default;
 }
 
-.cuc-locate-btn--loading {
+.cp-locate-btn--loading {
   color: #1565c0;  /* same blue as bookmark */
 }
 
-.cuc-locate-btn--denied {
+.cp-locate-btn--denied {
   color: #d93025;
 }
 
@@ -310,7 +310,7 @@ ul {
    Parcel Detail Sheet — phone default (full-width bottom sheet)
    =========================================================================== */
 
-.cuc-sheet-overlay {
+.cp-sheet-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -319,7 +319,7 @@ ul {
   pointer-events: none;
 }
 
-.cuc-sheet {
+.cp-sheet {
   pointer-events: auto;
   background: #fff;
   border-radius: 16px 16px 0 0;
@@ -341,20 +341,20 @@ ul {
 
 /* ---- Sheet header -------------------------------------------------------- */
 
-.cuc-sheet-header {
+.cp-sheet-header {
   padding: 16px 20px 12px;
   border-bottom: 1px solid #e0e0e0;
   flex-shrink: 0;
 }
 
-.cuc-sheet-header-actions {
+.cp-sheet-header-actions {
   display: flex;
   justify-content: flex-end;
   gap: 4px;
   margin-bottom: 4px;
 }
 
-.cuc-icon-btn {
+.cp-icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -365,25 +365,25 @@ ul {
   transition: background 120ms, color 120ms;
 }
 
-.cuc-icon-btn:hover {
+.cp-icon-btn:hover {
   background: #f1f3f4;
 }
 
-.cuc-icon-btn:focus-visible {
+.cp-icon-btn:focus-visible {
   box-shadow: 0 0 0 2px #1a73e8;
 }
 
-.cuc-icon-btn--active {
+.cp-icon-btn--active {
   color: #EB6800;
 }
 
-.cuc-sheet-address {
+.cp-sheet-address {
   font-size: 20px;
   font-weight: 500;
   color: #202124;
 }
 
-.cuc-sheet-context {
+.cp-sheet-context {
   font-size: 13px;
   color: #5f6368;
   margin-top: 2px;
@@ -391,7 +391,7 @@ ul {
 
 /* ---- Sheet scrollable content -------------------------------------------- */
 
-.cuc-sheet-content {
+.cp-sheet-content {
   overflow-y: auto;
   flex: 1;
   padding-bottom: 16px;
@@ -407,7 +407,7 @@ ul {
 
 @media (min-width: 768px) {
   /* Bottom bar: reposition to top-left, slide as whole unit when panel opens */
-  .cuc-bottom-bar {
+  .cp-bottom-bar {
     position: absolute;
     top: 16px;
     left: 16px;
@@ -421,14 +421,14 @@ ul {
                 opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .cuc-bottom-bar--panel-open {
+  .cp-bottom-bar--panel-open {
     transform: translateX(calc(-100% - 32px));
     opacity: 0;
     pointer-events: none;
   }
 
   /* Search container on desktop: fixed width, anchor for absolute results */
-  .cuc-search-row .cuc-search-container {
+  .cp-search-row .cp-search-container {
     position: relative;
     width: 380px;
     max-width: 380px;
@@ -438,7 +438,7 @@ ul {
   /* Search results: float below the bar as an overlay (NOT inline) so
      the locate button next to the search bar doesn't shift down when
      the dropdown opens. */
-  .cuc-search-row .cuc-search-results {
+  .cp-search-row .cp-search-results {
     position: absolute;
     top: calc(100% + 8px);
     bottom: auto;
@@ -449,7 +449,7 @@ ul {
   }
 
   /* Sheet overlay: left-side floating panel */
-  .cuc-sheet-overlay {
+  .cp-sheet-overlay {
     top: 16px;
     bottom: 16px;
     left: 16px;
@@ -457,7 +457,7 @@ ul {
     width: 400px;
   }
 
-  .cuc-sheet {
+  .cp-sheet {
     height: 100%;
     max-height: 100%;
     border-radius: 16px;
@@ -476,16 +476,16 @@ ul {
   }
 
   /* Section dividers: slightly more transparent on glass background */
-  .cuc-sheet .cuc-section {
+  .cp-sheet .cp-section {
     border-bottom-color: rgba(0, 0, 0, 0.08);
   }
 
-  .cuc-sheet .cuc-sheet-header {
+  .cp-sheet .cp-sheet-header {
     border-bottom-color: rgba(0, 0, 0, 0.08);
   }
 
   /* Search bar: glass treatment on desktop to match the panel aesthetic */
-  .cuc-search-bar {
+  .cp-search-bar {
     background: linear-gradient(
       145deg,
       rgba(242, 248, 255, 0.88) 0%,
@@ -514,15 +514,15 @@ ul {
    Collapsible Sections
    =========================================================================== */
 
-.cuc-section {
+.cp-section {
   border-bottom: 1px solid #e0e0e0;
 }
 
-.cuc-section:last-child {
+.cp-section:last-child {
   border-bottom: none;
 }
 
-.cuc-section-header {
+.cp-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -534,27 +534,27 @@ ul {
   color: #202124;
 }
 
-.cuc-section-header:hover {
+.cp-section-header:hover {
   background: #f8f9fa;
 }
 
-.cuc-section-header:focus-visible {
+.cp-section-header:focus-visible {
   box-shadow: inset 0 0 0 2px #1a73e8;
 }
 
-.cuc-section-header-static {
+.cp-section-header-static {
   cursor: default;
 }
 
-.cuc-section-header-static:hover {
+.cp-section-header-static:hover {
   background: none;
 }
 
-.cuc-section-title {
+.cp-section-title {
   flex: 1;
 }
 
-.cuc-chevron {
+.cp-chevron {
   font-size: 22px;
   color: #5f6368;
   transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -563,11 +563,11 @@ ul {
   line-height: 1;
 }
 
-.cuc-section-body {
+.cp-section-body {
   padding: 0 20px 14px;
 }
 
-.cuc-section-animate {
+.cp-section-animate {
   animation: expandFade 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
@@ -582,7 +582,7 @@ ul {
   }
 }
 
-.cuc-section-empty {
+.cp-section-empty {
   font-size: 13px;
   color: #9aa0a6;
   padding: 8px 0;
@@ -592,31 +592,31 @@ ul {
    Permit Card
    =========================================================================== */
 
-.cuc-permit-card {
+.cp-permit-card {
   background: rgba(120, 120, 128, 0.16);
   border-radius: 12px;
   padding: 14px 16px;
   margin-bottom: 10px;
 }
 
-.cuc-permit-card:last-child {
+.cp-permit-card:last-child {
   margin-bottom: 0;
 }
 
-.cuc-permit-header {
+.cp-permit-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
 
-.cuc-permit-category {
+.cp-permit-category {
   font-size: 15px;
   font-weight: 500;
   color: #202124;
 }
 
-.cuc-permit-badge {
+.cp-permit-badge {
   font-size: 12px;
   font-weight: 500;
   color: #1b5e20;
@@ -627,35 +627,35 @@ ul {
   margin-left: 8px;
 }
 
-.cuc-permit-field {
+.cp-permit-field {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   padding: 3px 0;
 }
 
-.cuc-permit-label {
+.cp-permit-label {
   font-size: 13px;
   color: #5f6368;
   flex-shrink: 0;
   margin-right: 12px;
 }
 
-.cuc-permit-value {
+.cp-permit-value {
   font-size: 13px;
   color: #202124;
   text-align: right;
 }
 
 /* Column layout for job description */
-.cuc-permit-field--column {
+.cp-permit-field--column {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
   padding: 4px 0;
 }
 
-.cuc-permit-description-text {
+.cp-permit-description-text {
   font-size: 13px;
   color: #202124;
   line-height: 1.5;
@@ -663,7 +663,7 @@ ul {
   word-break: break-word;
 }
 
-.cuc-permit-details {
+.cp-permit-details {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid #e0e0e0;
@@ -672,7 +672,7 @@ ul {
 
 /* ---- Expand / Collapse Details toggle ------------------------------------ */
 
-.cuc-permit-toggle {
+.cp-permit-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -688,24 +688,24 @@ ul {
   transition: background 120ms, color 120ms;
 }
 
-.cuc-permit-toggle:hover {
+.cp-permit-toggle:hover {
   background: #e8f0fe;
 }
 
-.cuc-permit-toggle:active {
+.cp-permit-toggle:active {
   background: #d2e3fc;
 }
 
-.cuc-permit-toggle:focus-visible {
+.cp-permit-toggle:focus-visible {
   box-shadow: 0 0 0 2px #1a73e8;
 }
 
-.cuc-permit-toggle-label {
+.cp-permit-toggle-label {
   display: inline-block;
   text-decoration: none;
 }
 
-.cuc-permit-toggle-chevron {
+.cp-permit-toggle-chevron {
   font-size: 20px;
   transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none !important;
@@ -719,7 +719,7 @@ ul {
    reveals the plain-English meaning of the trailing suffix code.
    --------------------------------------------------------------------------- */
 
-.cuc-suffix-tooltip {
+.cp-suffix-tooltip {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -727,7 +727,7 @@ ul {
   vertical-align: middle;
 }
 
-.cuc-suffix-tooltip-trigger {
+.cp-suffix-tooltip-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -741,22 +741,22 @@ ul {
   transition: color 120ms;
 }
 
-.cuc-suffix-tooltip-trigger:hover,
-.cuc-suffix-tooltip-trigger:focus-visible {
+.cp-suffix-tooltip-trigger:hover,
+.cp-suffix-tooltip-trigger:focus-visible {
   color: #1a73e8;
 }
 
-.cuc-suffix-tooltip-trigger:focus-visible {
+.cp-suffix-tooltip-trigger:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px #1a73e8;
 }
 
-.cuc-suffix-tooltip-trigger .material-symbols-outlined {
+.cp-suffix-tooltip-trigger .material-symbols-outlined {
   font-size: 16px;
   font-variation-settings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20";
 }
 
-.cuc-suffix-tooltip-content {
+.cp-suffix-tooltip-content {
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
@@ -780,23 +780,23 @@ ul {
    About Parcel metadata
    =========================================================================== */
 
-.cuc-meta-row {
+.cp-meta-row {
   display: flex;
   justify-content: space-between;
   padding: 6px 0;
   border-bottom: 1px solid #f1f3f4;
 }
 
-.cuc-meta-row:last-child {
+.cp-meta-row:last-child {
   border-bottom: none;
 }
 
-.cuc-meta-label {
+.cp-meta-label {
   font-size: 13px;
   color: #5f6368;
 }
 
-.cuc-meta-value {
+.cp-meta-value {
   font-size: 13px;
   color: #202124;
   font-weight: 500;
@@ -807,11 +807,11 @@ ul {
    Empty State — plain text only (no icon)
    =========================================================================== */
 
-.cuc-empty-state {
+.cp-empty-state {
   padding: 16px 0;
 }
 
-.cuc-empty-text {
+.cp-empty-text {
   font-size: 14px;
   color: #5f6368;
 }
@@ -820,7 +820,7 @@ ul {
    Location marker
    =========================================================================== */
 
-.cuc-location-marker {
+.cp-location-marker {
   cursor: default;
 }
 
@@ -828,7 +828,7 @@ ul {
    Attribution — bottom-left credit beside Mapbox attribution
    =========================================================================== */
 
-.cuc-attribution {
+.cp-attribution {
   position: absolute;
   bottom: 8px;
   left: 8px;
@@ -853,45 +853,45 @@ ul {
    with the Mapbox "© Mapbox © OpenStreetMap Improve this map" block, which
    varies in width with locale, zoom, and the "Improve this map" link. */
 @media (min-width: 768px) {
-  .cuc-attribution {
+  .cp-attribution {
     left: auto;
     right: 8px;
     bottom: 32px; /* clears the ~22px Mapbox attribution row */
   }
 }
 
-.cuc-attribution-link {
+.cp-attribution-link {
   color: #0062CF;
   text-decoration: none;
   font-weight: 500;
 }
 
-.cuc-attribution-link:hover {
+.cp-attribution-link:hover {
   text-decoration: underline;
 }
 
-.cuc-attribution-linkedin {
+.cp-attribution-linkedin {
   display: flex;
   align-items: center;
   color: #0A66C2;
   transition: opacity 120ms;
 }
 
-.cuc-attribution-linkedin:hover {
+.cp-attribution-linkedin:hover {
   opacity: 0.75;
 }
 
 /* Mobile-only: lift attribution above the bottom bar (tighter spacing
    than before so the gap between attribution and search bar feels right). */
 @media (max-width: 767px) {
-  .cuc-attribution {
+  .cp-attribution {
     bottom: calc(max(20px, env(safe-area-inset-bottom)) + 52px);
   }
 
   /* When the parcel sheet is open, the sheet's max-height is 65vh (see
-     .cuc-sheet). Lift the attribution to sit 8px above the sheet's top
-     edge. Keep this in sync with .cuc-sheet's max-height. */
-  .cuc-app--sheet-open .cuc-attribution {
+     .cp-sheet). Lift the attribution to sit 8px above the sheet's top
+     edge. Keep this in sync with .cp-sheet's max-height. */
+  .cp-app--sheet-open .cp-attribution {
     bottom: calc(65vh + 8px);
   }
 }
