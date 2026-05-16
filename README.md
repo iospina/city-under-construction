@@ -39,7 +39,7 @@ React client reads from City Permits' API endpoints, never directly from DOB NOW
 You need:
 
 - Node 20+
-- A Neon Postgres project (free tier is fine) — get the pooled connection
+- A Neon Postgres project (free tier is fine). Get the pooled connection
   string from the project dashboard.
 - A Mapbox token for the client geocoder.
 - Optional: a Socrata app token for un-rate-limited DOB NOW fetches.
@@ -52,9 +52,9 @@ npm install
 npm run db:init     # apply db/schema.sql
 npm run db:sync     # populate the permits table from DOB NOW (~30–60s)
 
-npm run dev:full    # vercel dev — Vite + /api routes on one port
+npm run dev:full    # vercel dev, Vite + /api routes on one port
 # or
-npm run dev         # vite only — client works but /api routes return 404
+npm run dev         # vite only, client works but /api routes return 404
 ```
 
 `npm run dev:full` requires the Vercel CLI: `npm i -g vercel`, then `vercel link`.
@@ -82,13 +82,13 @@ Realistic monthly cost: ~$20 (Vercel Pro). Database is on Neon free tier.
 ```
 api/                     Vercel serverless functions
   cron/sync-permits.ts   Daily cron → fills the permits table
-  parcels.ts             GET /api/parcels — list-all
-  parcels/[bbl].ts       GET /api/parcels/:bbl — single BBL
+  parcels.ts             GET /api/parcels, list-all
+  parcels/[bbl].ts       GET /api/parcels/:bbl, single BBL
 db/
   schema.sql             permits table definition (idempotent CREATEs)
 lib/
   db.ts                  Neon client (sql + Pool)
-  sync.ts                runSync() — used by the cron handler and the CLI
+  sync.ts                runSync(), used by the cron handler and the CLI
 scripts/
   init-db.ts             Apply db/schema.sql (npm run db:init)
   sync.ts                Run sync against DATABASE_URL (npm run db:sync)
@@ -102,7 +102,7 @@ The single source of truth is the
 dataset. City Permits does not pull the legacy DOB BIS (`ipu4-2q9a`) feed, the
 Electrical, Elevator, or LAA datasets.
 
-The May 2026 audit (Notion: *City Permits — Permit Data Audit, May 2026*) documents
+The May 2026 audit (Notion: *City Permits Data Audit, May 2026*) documents
 how the previous browser-only architecture silently truncated to ~22 days
 of issuance citywide. The architecture above eliminates that truncation as
 a structural limit.
